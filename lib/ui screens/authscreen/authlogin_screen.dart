@@ -5,6 +5,7 @@ import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
 import 'package:matabari/widgets/button_screen.dart';
 import 'package:matabari/ui%20screens/authscreen/otp_screen.dart';
+import 'package:matabari/widgets/formfield.dart';
 
 class AuthLoginScreen extends StatefulWidget {
   const AuthLoginScreen({super.key});
@@ -39,12 +40,25 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                 const SizedBox(height: 50),
 
                 /// Title
-                Text(
-                  "Bringing Devotion\nCloser to Every Devotee",
-                  textAlign: TextAlign.center,
-                  style: cormorantInfantBold.copyWith(
-                    color: ColorResources.primary,
-                    fontSize: Dimensions.spacingSize30,
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xffC42118),
+                      Color(0xff9D1911),
+                      Color(0xff650E07),
+                    ],
+                    stops: [0.0, 0.45, 1.0],
+                  ).createShader(bounds),
+                  blendMode: BlendMode.srcIn,
+                  child: Text(
+                    "Bringing Devotion\nCloser to Every Devotee",
+                    textAlign: TextAlign.center,
+                    style: cormorantInfantBold.copyWith(
+                      color: Colors.white,
+                      fontSize: 34,
+                    ),
                   ),
                 ),
 
@@ -54,88 +68,70 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                 const SizedBox(height: 20),
                 Text(
                   "Join thousands of devotees connected with",
-                  style: cormorantInfantBold.copyWith(
+                  style: avenirNextCyr.copyWith(
                     color: ColorResources.blackColor,
-                    fontSize: Dimensions.spacingSize18,
+                    fontSize: Dimensions.spacingSize12,
                   ),
                 ),
                 Center(
                   child: Text(
                     "Matabari Pera digitally.",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize18,
+                      fontSize: Dimensions.spacingSize12,
                     ),
                   ),
                 ),
                 const SizedBox(height: 40),
 
-                /// Mobile Label
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Mobile Number",
-                    style: cormorantInfantBold.copyWith(
-                      color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize16,
+                /// Mobile Field
+                LabeledTextField(
+                  label: "Mobile Number",
+                  hint: "Enter your number",
+                  controller: mobileController,
+                  keyboardType: TextInputType.phone,
+                  prefix: Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text("🇮🇳", style: TextStyle(fontSize: 20)),
+                        SizedBox(width: Dimensions.smallSpace),
+                        const Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: ColorResources.textDark,
+                        ),
+                        Container(
+                          width: 1,
+                          height: 22,
+                          margin: const EdgeInsets.only(left: 12),
+                          color: ColorResources.border,
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 8),
-
-                /// Mobile Field
-                Container(
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.6),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFD8B46B)),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: Dimensions.smallSpace),
-
-                      const Text("🇮🇳", style: TextStyle(fontSize: 20)),
-
-                       SizedBox(width: Dimensions.smallSpace),
-
-                      const Icon(Icons.keyboard_arrow_down, size: 20),
-
-                      Container(
-                        width: 1,
-                        height: 25,
-                        margin: const EdgeInsets.symmetric(horizontal: 12),
-                        color: Colors.grey.shade300,
-                      ),
-
-                      Expanded(
-                        child: TextField(
-                          controller: mobileController,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Enter your number",
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                 SizedBox(height: Dimensions.spacingSize18),
+                const SizedBox(height: 6),
 
                 /// Terms Checkbox
                 Row(
                   children: [
-                    Checkbox(
-                      value: isAccepted,
-                      activeColor: const Color(0xFFB11D2E),
-                      onChanged: (value) {
-                        setState(() {
-                          isAccepted = value ?? false;
-                        });
-                      },
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Checkbox(
+                        value: isAccepted,
+                        activeColor: const Color(0xFFB11D2E),
+                        shape: const CircleBorder(),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                        onChanged: (value) {
+                          setState(() {
+                            isAccepted = value ?? false;
+                          });
+                        },
+                      ),
                     ),
                     Expanded(
                       child: RichText(
@@ -144,16 +140,16 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                           children: [
                             TextSpan(
                               text: "I accept ",
-                              style: cormorantInfantBold.copyWith(
+                              style: avenirNextCyr.copyWith(
                                 color: ColorResources.textLight,
-                                fontSize: Dimensions.spacingSize18,
+                                fontSize: Dimensions.spacingSize12,
                               ),
                             ),
                             TextSpan(
                               text: "Terms & Conditions",
-                              style: cormorantInfantBold.copyWith(
+                              style: avenirNextCyr.copyWith(
                                 color: ColorResources.kArrow,
-                                fontSize: Dimensions.spacingSize18,
+                                fontSize: Dimensions.spacingSize12,
                               ),
                             ),
                           ],
@@ -163,20 +159,36 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                   ],
                 ),
 
-                 SizedBox(height: Dimensions.spacingSize40),
+                const SizedBox(height: 16),
 
                 /// OTP Button
                 CustomButton(
                   title: "Send OTP",
                   onTap: () {
+                    if (!isAccepted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Please check the Terms & Conditions box",
+                          ),
+                          backgroundColor: Color(0xFFB11D2E),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => OtpScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => OtpScreen(
+                          phoneNumber: mobileController.text.trim(),
+                        ),
+                      ),
                     );
                   },
                 ),
 
-                 SizedBox(height: Dimensions.hight19),
+                const SizedBox(height: 10),
 
                 // /// Login Link
                 InkWell(
@@ -190,20 +202,22 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                   },
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(color: Colors.black54, fontSize: 13),
+                      style: TextStyle(color: Colors.black54, fontSize: 16),
                       children: [
                         TextSpan(
                           text: "Already have an account. ",
-                          style: cormorantInfantBold.copyWith(
+                          style: avenirNextCyr.copyWith(
                             color: ColorResources.textLight,
-                            fontSize: Dimensions.spacingSize18,
+                            fontSize: Dimensions.spacingSize12,
                           ),
                         ),
                         TextSpan(
                           text: "Log in",
-                          style: cormorantInfantBold.copyWith(
+                          style: avenirNextCyr.copyWith(
                             color: ColorResources.kArrow,
-                            fontSize: Dimensions.spacingSize18,
+                            fontSize: Dimensions.spacingSize12,
+                            decoration: TextDecoration.underline,
+                            decorationColor: ColorResources.kArrow,
                           ),
                         ),
                       ],

@@ -33,7 +33,7 @@ class PanditCard extends StatelessWidget {
           border: Border.all(color: const Color(0xffF3D8B3), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.06),
+              color: Colors.black.withValues(alpha: .06),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),

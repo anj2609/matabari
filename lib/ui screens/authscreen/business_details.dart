@@ -1,6 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:matabari/ui%20screens/authscreen/product_info.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:matabari/config/utils/colors.dart';
+import 'package:matabari/config/utils/dimensions.dart';
+import 'package:matabari/config/utils/style.dart';
+import 'package:matabari/ui%20screens/authscreen/payment_details.dart';
+import 'package:matabari/widgets/formfield.dart';
 
 class BusinessDetailScreen extends StatefulWidget {
   const BusinessDetailScreen({super.key});
@@ -21,6 +27,11 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
   final address1Controller = TextEditingController();
   final address2Controller = TextEditingController();
   final pinCodeController = TextEditingController();
+  final aadhaarController = TextEditingController();
+
+  File? shopLicense;
+  File? fssaiCertificate;
+  File? gstCertificate;
 
   final List<String> businessTypes = [
     "Prasad Seller",
@@ -39,29 +50,52 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
     "Haryana",
   ];
 
-  InputDecoration fieldDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-      filled: true,
-      fillColor: const Color(0xffF7F2EB),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xffB21E2B)),
-      ),
+  static const LinearGradient _redGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xffC42118), Color(0xff9D1911), Color(0xff650E07)],
+    stops: [0.0, 0.45, 1.0],
+  );
+
+  Future<void> pickImage(String type) async {
+    final XFile? image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
     );
+
+    if (image != null) {
+      setState(() {
+        switch (type) {
+          case "shop":
+            shopLicense = File(image.path);
+            break;
+
+          case "fssai":
+            fssaiCertificate = File(image.path);
+            break;
+
+          case "gst":
+            gstCertificate = File(image.path);
+            break;
+        }
+      });
+    }
+  }
+
+  void showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void submitForm() {
+    if (shopLicense == null) {
+      showMessage("Please upload Shop License");
+      return;
+    }
+
+    if (fssaiCertificate == null) {
+      showMessage("Please upload FSSAI Certificate");
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Business Details Submitted")),
@@ -69,10 +103,94 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProductInformation()),
+        MaterialPageRoute(builder: (context) => BankPaymentDetailsPage()),
       );
-      
     }
+  }
+
+  Widget uploadField({
+    required String title,
+    required File? file,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: LabeledTextField.labelStyle),
+        const SizedBox(height: 8),
+
+        Container(
+          height: 54,
+          decoration: BoxDecoration(
+            color: ColorResources.cardBg,
+            border: Border.all(color: ColorResources.border),
+            borderRadius: BorderRadius.circular(Dimensions.radiusSizeDefault),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    file == null
+                        ? "Click to upload $title"
+                        : file.path.split('/').last,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: file == null
+                          ? ColorResources.textLight
+                          : ColorResources.textDark,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+
+              Container(
+                margin: const EdgeInsets.all(5),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: _redGradient,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: onTap,
+                    icon: const Icon(
+                      Icons.upload_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      "Upload",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget uploadedPreview(File? file) {
+    if (file == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.file(file, height: 100, width: 100, fit: BoxFit.cover),
+      ),
+    );
   }
 
   @override
@@ -92,19 +210,8 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 5,
-                      ),
-                      // decoration: BoxDecoration(
-                      //   color: Colors.white54,
-                      //   borderRadius: BorderRadius.circular(20),
-                      // ),
-                      child: const Text("Skip", style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),
@@ -112,26 +219,27 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                 const SizedBox(height: 20),
 
                 /// Heading
-                const Text(
-                  "Enter your\nBusiness Details.",
-                  style: TextStyle(
-                    fontSize: 25,
-                    height: 1.2,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xffA71D2A),
+                ShaderMask(
+                  shaderCallback: (bounds) =>
+                      _redGradient.createShader(bounds),
+                  blendMode: BlendMode.srcIn,
+                  child: Text(
+                    "Enter your\nBusiness Details.",
+                    style: avenirNextCyr.copyWith(
+                      color: Colors.white,
+                      fontSize: 34,
+                      height: 1.2,
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 35),
 
                 /// Business Type
-                const Text("Business Type", style: TextStyle(fontSize: 12)),
-
-                const SizedBox(height: 8),
-
-                DropdownButtonFormField<String>(
+                LabeledDropdownField<String>(
+                  label: "Business Type",
+                  hint: "e.g. Prasad Seller",
                   value: businessType,
-                  decoration: fieldDecoration("e.g. Prasad Seller"),
                   items: businessTypes.map((item) {
                     return DropdownMenuItem(value: item, child: Text(item));
                   }).toList(),
@@ -154,48 +262,32 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "GST Number (Optional)",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: gstController,
-                            decoration: fieldDecoration("GST Number"),
-                          ),
-                        ],
+                      child: LabeledTextField(
+                        label: "GST Number (Optional)",
+                        hint: "GST Number",
+                        controller: gstController,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "PAN Number",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: panController,
-                            textCapitalization: TextCapitalization.characters,
-                            decoration: fieldDecoration("PAN Number"),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Required";
-                              }
+                      child: LabeledTextField(
+                        label: "PAN Number",
+                        hint: "PAN Number",
+                        controller: panController,
+                        textCapitalization: TextCapitalization.characters,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Required";
+                          }
 
-                              if (value.length != 10) {
-                                return "Invalid PAN 10 Numbers";
-                              }
+                          if (!RegExp(
+                            r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$',
+                          ).hasMatch(value)) {
+                            return "Invalid PAN Number";
+                          }
 
-                              return null;
-                            },
-                          ),
-                        ],
+                          return null;
+                        },
                       ),
                     ),
                   ],
@@ -204,16 +296,10 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                 const SizedBox(height: 18),
 
                 /// Registration Number
-                const Text(
-                  "Business Registration Number",
-                  style: TextStyle(fontSize: 12),
-                ),
-
-                const SizedBox(height: 8),
-
-                TextFormField(
+                LabeledTextField(
+                  label: "Business Registration Number",
+                  hint: "Enter your BRN",
                   controller: registrationController,
-                  decoration: fieldDecoration("Enter your BRN"),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Enter registration number";
@@ -225,13 +311,10 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                 const SizedBox(height: 18),
 
                 /// Address 1
-                const Text("Shop Address", style: TextStyle(fontSize: 12)),
-
-                const SizedBox(height: 8),
-
-                TextFormField(
+                LabeledTextField(
+                  label: "Shop Address",
+                  hint: "Address Line 1",
                   controller: address1Controller,
-                  decoration: fieldDecoration("Address Line 1"),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Enter address";
@@ -242,9 +325,10 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
 
                 const SizedBox(height: 10),
 
-                TextFormField(
+                LabeledTextField(
+                  label: "",
+                  hint: "Address Line 2",
                   controller: address2Controller,
-                  decoration: fieldDecoration("Address Line 2"),
                 ),
 
                 const SizedBox(height: 18),
@@ -253,9 +337,10 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<String>(
+                      child: LabeledDropdownField<String>(
+                        label: "State",
+                        hint: "Enter State",
                         value: selectedState,
-                        decoration: fieldDecoration("Enter State"),
                         items: states.map((state) {
                           return DropdownMenuItem(
                             value: state,
@@ -279,10 +364,11 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                     const SizedBox(width: 10),
 
                     Expanded(
-                      child: TextFormField(
+                      child: LabeledTextField(
+                        label: "PIN Code",
+                        hint: "Enter PIN Code",
                         controller: pinCodeController,
                         keyboardType: TextInputType.number,
-                        decoration: fieldDecoration("Enter PIN Code"),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return "Required";
@@ -299,25 +385,81 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                   ],
                 ),
 
+                const SizedBox(height: 18),
+
+                /// Aadhaar
+                LabeledTextField(
+                  label: "Aadhaar Card Number",
+                  hint: "Enter Aadhaar number",
+                  controller: aadhaarController,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Enter Aadhaar Number";
+                    }
+
+                    if (!RegExp(r'^\d{12}$').hasMatch(value)) {
+                      return "Aadhaar must be 12 digits";
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 18),
+
+                /// Document Uploads
+                uploadField(
+                  title: "Shop License",
+                  file: shopLicense,
+                  onTap: () => pickImage("shop"),
+                ),
+                uploadedPreview(shopLicense),
+
+                const SizedBox(height: 18),
+
+                uploadField(
+                  title: "FSSAI Certificate",
+                  file: fssaiCertificate,
+                  onTap: () => pickImage("fssai"),
+                ),
+                uploadedPreview(fssaiCertificate),
+
+                const SizedBox(height: 18),
+
+                uploadField(
+                  title: "GST Certificate (Optional)",
+                  file: gstCertificate,
+                  onTap: () => pickImage("gst"),
+                ),
+                uploadedPreview(gstCertificate),
+
                 const SizedBox(height: 28),
 
                 SizedBox(
                   width: double.infinity,
                   height: 54,
-                  child: ElevatedButton(
-                    onPressed: submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xffB21E2B),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: _redGradient,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
-                      "Next",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                    child: ElevatedButton(
+                      onPressed: submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Next",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

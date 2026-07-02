@@ -47,7 +47,7 @@ class WhyBookWithUs extends StatelessWidget {
                 ),
               ),
 
-              Container(height: 60, width: 1, color: orange.withOpacity(.4)),
+              Container(height: 60, width: 1, color: orange.withValues(alpha: .4)),
 
               Expanded(
                 child: _featureItem(
@@ -57,7 +57,7 @@ class WhyBookWithUs extends StatelessWidget {
                 ),
               ),
 
-              Container(height: 60, width: 1, color: orange.withOpacity(.4)),
+              Container(height: 60, width: 1, color: orange.withValues(alpha: .4)),
 
               Expanded(
                 child: _featureItem(
@@ -87,8 +87,8 @@ class WhyBookWithUs extends StatelessWidget {
           height: 48,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: orange.withOpacity(.12),
-            border: Border.all(color: orange.withOpacity(.4)),
+            color: orange.withValues(alpha: .12),
+            border: Border.all(color: orange.withValues(alpha: .4)),
           ),
           child: Icon(icon, color: orange, size: 24),
         ),

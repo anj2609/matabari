@@ -24,3 +24,8 @@ final cormorantInfantExtrabold= TextStyle(
   fontFamily: 'CormorantInfant',
  fontWeight: FontWeight.w800,
 );
+
+const avenirNextCyr = TextStyle(
+  fontFamily: 'AvenirNextCyr',
+  fontWeight: FontWeight.w500,
+);

@@ -67,8 +67,8 @@ class PujaBanner extends StatelessWidget {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Colors.black.withOpacity(.65),
-                    Colors.black.withOpacity(.30),
+                    Colors.black.withValues(alpha: .65),
+                    Colors.black.withValues(alpha: .30),
                     Colors.transparent,
                   ],
                 ),
@@ -262,7 +262,7 @@ class PujaBanner extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE6C98D), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.15),
+            color: Colors.black.withValues(alpha: .15),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -378,7 +378,7 @@ class DevotionBanner extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.white.withOpacity(.05), Colors.transparent],
+                  colors: [Colors.white.withValues(alpha: .05), Colors.transparent],
                 ),
               ),
             ),

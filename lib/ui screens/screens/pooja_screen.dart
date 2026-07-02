@@ -177,7 +177,7 @@ class PujaScreen extends StatelessWidget {
       width: 36,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(.15),
+        color: Colors.white.withValues(alpha: .15),
       ),
       child: Icon(icon, color: Colors.white, size: 18),
     );
@@ -248,7 +248,7 @@ class PujaCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: Colors.black.withValues(alpha: .05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

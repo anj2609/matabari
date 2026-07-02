@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:matabari/ui%20screens/authscreen/business_details.dart';
-import 'package:matabari/ui%20screens/authscreen/business_document.dart';
+import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
+import 'package:matabari/widgets/formfield.dart';
+import 'package:matabari/widgets/skip_button.dart';
 
 class BankPaymentDetailsPage extends StatefulWidget {
   const BankPaymentDetailsPage({super.key});
@@ -12,37 +13,12 @@ class BankPaymentDetailsPage extends StatefulWidget {
 class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final accountHolderController = TextEditingController();
+  final accountHolderFirstController = TextEditingController();
+  final accountHolderLastController = TextEditingController();
   final bankNameController = TextEditingController();
   final accountNumberController = TextEditingController();
   final ifscController = TextEditingController();
   final upiController = TextEditingController();
-
-  InputDecoration fieldDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-      filled: true,
-      fillColor: const Color(0xffF7F2EB),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xffB21E2B)),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.red),
-      ),
-    );
-  }
 
   void submitForm() {
     if (_formKey.currentState!.validate()) {
@@ -50,18 +26,23 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
         const SnackBar(content: Text("Bank Details Submitted Successfully")),
       );
       Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => BusinessDocumentsScreen()),
-    );
-
-      // Get.to(() => NextScreen());
+        context,
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
+      );
     }
-   
+  }
+
+  void skipToDashboard() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DashboardScreen()),
+    );
   }
 
   @override
   void dispose() {
-    accountHolderController.dispose();
+    accountHolderFirstController.dispose();
+    accountHolderLastController.dispose();
     bankNameController.dispose();
     accountNumberController.dispose();
     ifscController.dispose();
@@ -86,20 +67,10 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.arrow_back, color: Colors.black),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 5,
-                      ),
-                      // decoration: BoxDecoration(
-                      //   color: Colors.white54,
-                      //   borderRadius: BorderRadius.circular(20),
-                      // ),
-                      child: const Text("Skip", style: TextStyle(fontSize: 12)),
-                    ),
+                    SkipButton(onTap: skipToDashboard),
                   ],
                 ),
 
@@ -119,34 +90,45 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
                 const SizedBox(height: 35),
 
                 /// Account Holder Name
-                const Text(
-                  "Account Holder Name",
-                  style: TextStyle(fontSize: 12),
-                ),
-
-                const SizedBox(height: 8),
-
-                TextFormField(
-                  controller: accountHolderController,
-                  decoration: fieldDecoration("Enter your account name"),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return "Please enter account holder name";
-                    }
-                    return null;
-                  },
+                Row(
+                  children: [
+                    Expanded(
+                      child: LabeledTextField(
+                        label: "Account Holder First Name",
+                        hint: "Enter first name",
+                        controller: accountHolderFirstController,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return "Required";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: LabeledTextField(
+                        label: "Account Holder Last Name",
+                        hint: "Enter last name",
+                        controller: accountHolderLastController,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return "Required";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 18),
 
                 /// Bank Name
-                const Text("Bank Name", style: TextStyle(fontSize: 12)),
-
-                const SizedBox(height: 8),
-
-                TextFormField(
+                LabeledTextField(
+                  label: "Bank Name",
+                  hint: "Enter bank name",
                   controller: bankNameController,
-                  decoration: fieldDecoration("Enter bank name"),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Please enter bank name";
@@ -158,14 +140,11 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
                 const SizedBox(height: 18),
 
                 /// Account Number
-                const Text("Account Number", style: TextStyle(fontSize: 12)),
-
-                const SizedBox(height: 8),
-
-                TextFormField(
+                LabeledTextField(
+                  label: "Account Number",
+                  hint: "Enter your account number",
                   controller: accountNumberController,
                   keyboardType: TextInputType.number,
-                  decoration: fieldDecoration("Enter your account number"),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please enter account number";
@@ -185,62 +164,43 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "IFSC Code",
-                            style: TextStyle(fontSize: 12),
-                          ),
+                      child: LabeledTextField(
+                        label: "IFSC Code",
+                        hint: "Enter bank IFSC Code",
+                        controller: ifscController,
+                        textCapitalization: TextCapitalization.characters,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Required";
+                          }
 
-                          const SizedBox(height: 8),
+                          if (value.length < 11) {
+                            return "Invalid";
+                          }
 
-                          TextFormField(
-                            controller: ifscController,
-                            textCapitalization: TextCapitalization.characters,
-                            decoration: fieldDecoration("Enter bank IFSC Code"),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Required";
-                              }
-
-                              if (value.length < 11) {
-                                return "Invalid";
-                              }
-
-                              return null;
-                            },
-                          ),
-                        ],
+                          return null;
+                        },
                       ),
                     ),
 
                     const SizedBox(width: 10),
 
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("UPI ID", style: TextStyle(fontSize: 12)),
+                      child: LabeledTextField(
+                        label: "UPI ID",
+                        hint: "Enter your UPI ID",
+                        controller: upiController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Required";
+                          }
 
-                          const SizedBox(height: 8),
+                          if (!value.contains("@")) {
+                            return "Invalid UPI";
+                          }
 
-                          TextFormField(
-                            controller: upiController,
-                            decoration: fieldDecoration("Enter your UPI ID"),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Required";
-                              }
-
-                              if (!value.contains("@")) {
-                                return "Invalid UPI";
-                              }
-
-                              return null;
-                            },
-                          ),
-                        ],
+                          return null;
+                        },
                       ),
                     ),
                   ],

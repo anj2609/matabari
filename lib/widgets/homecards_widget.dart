@@ -31,8 +31,8 @@ class UpcomingPujaCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xffF59E0B).withOpacity(.35),
-                      const Color(0xff5B2500).withOpacity(.75),
+                      const Color(0xffF59E0B).withValues(alpha: .35),
+                      const Color(0xff5B2500).withValues(alpha: .75),
                       const Color(0xff1A0B05),
                     ],
                   ),

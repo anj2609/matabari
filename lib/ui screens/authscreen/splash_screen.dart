@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/onboarding_prefs.dart';
 import 'package:matabari/ui%20screens/authscreen/onboarding_screen.dart';
+import 'package:matabari/ui%20screens/authscreen/authlogin_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,9 +13,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -21,21 +23,40 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1800),
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(_controller);
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.08, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
+      ),
+    );
 
     _controller.forward();
 
-    Timer(const Duration(seconds: 3), () {
+    Timer(const Duration(seconds: 3), () async {
+      // Show onboarding only on the first launch; afterwards go straight
+      // to the mobile-number (login) screen.
+      final seenOnboarding = await OnboardingPrefs.hasSeen();
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) =>  OnboardingScreen(),
+        PageRouteBuilder(
+          pageBuilder: (_, animation, __) => seenOnboarding
+              ? const AuthLoginScreen()
+              : const OnboardingScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
     });
@@ -50,16 +71,23 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SizedBox(
-          height: double.infinity,
-          width: double.infinity,
-          child: Image.asset(
-            "assets/images/splash_screen.png",
-            fit: BoxFit.cover,
-          ),
-        ),
+      backgroundColor: const Color(0xFFF5ECD5),
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          return Opacity(
+            opacity: _fadeAnimation.value,
+            child: Transform.scale(
+              scale: _scaleAnimation.value,
+              child: SizedBox.expand(
+                child: Image.asset(
+                  "assets/images/splash_screen.png",
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

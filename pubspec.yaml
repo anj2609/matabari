@@ -22,6 +22,7 @@ dependencies:
   carousel_slider: ^5.1.2
   get: ^4.7.3
   audioplayers: ^6.7.1
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -48,5 +49,9 @@ flutter:
           weight: 600
         - asset: assets/fonts/CormorantInfant-Bold.ttf
           weight: 700
+    - family: AvenirNextCyr
+      fonts:
+        - asset: assets/fonts/Avenir Next Cyr Medium.ttf
+          weight: 500
        
   
