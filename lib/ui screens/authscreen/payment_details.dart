@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
+import 'package:matabari/config/utils/session_prefs.dart';
+import 'package:matabari/ui%20screens/screens/seller_dashboard_screen.dart';
 import 'package:matabari/widgets/formfield.dart';
 import 'package:matabari/widgets/skip_button.dart';
 
@@ -20,22 +21,28 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
   final ifscController = TextEditingController();
   final upiController = TextEditingController();
 
-  void submitForm() {
+  void submitForm() async {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Bank Details Submitted Successfully")),
       );
-      Navigator.push(
+      await SessionPrefs.setLoggedIn('seller');
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => DashboardScreen()),
+        MaterialPageRoute(builder: (context) => const SellerDashboardScreen()),
+        (route) => false,
       );
     }
   }
 
-  void skipToDashboard() {
-    Navigator.push(
+  void skipToDashboard() async {
+    await SessionPrefs.setLoggedIn('seller');
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => DashboardScreen()),
+      MaterialPageRoute(builder: (context) => const SellerDashboardScreen()),
+      (route) => false,
     );
   }
 

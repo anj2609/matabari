@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/onboarding_prefs.dart';
+import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/ui%20screens/authscreen/onboarding_screen.dart';
 import 'package:matabari/ui%20screens/authscreen/authlogin_screen.dart';
+import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/seller_dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -43,6 +46,28 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     Timer(const Duration(seconds: 3), () async {
+      // A previously saved session takes the user straight back to their
+      // dashboard — no onboarding, no login — until they log out or the
+      // app is uninstalled.
+      final loggedIn = await SessionPrefs.isLoggedIn();
+      if (loggedIn) {
+        final role = await SessionPrefs.getRole();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, animation, __) => role == 'seller'
+                ? const SellerDashboardScreen()
+                : const DashboardScreen(),
+            transitionsBuilder: (_, animation, __, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+        );
+        return;
+      }
+
       // Show onboarding only on the first launch; afterwards go straight
       // to the mobile-number (login) screen.
       final seenOnboarding = await OnboardingPrefs.hasSeen();

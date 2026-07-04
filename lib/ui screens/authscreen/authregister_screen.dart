@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
+import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/authscreen/business_details.dart';
 import 'package:matabari/widgets/formfield.dart';
@@ -22,6 +23,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   String? selectedGender;
   final List<String> genders = ["Male", "Female", "Other"];
 
+  final ownerFirstNameController = TextEditingController();
+  final ownerLastNameController = TextEditingController();
+
   // Shared red gradient (same as the onboarding screens).
   static const LinearGradient _redGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -33,6 +37,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   void dispose() {
     dobController.dispose();
+    ownerFirstNameController.dispose();
+    ownerLastNameController.dispose();
     super.dispose();
   }
 
@@ -168,7 +174,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 ),
                               ),
                               onPressed: selectedRole == "Prasad Seller"
-                                  ? () {
+                                  ? () async {
+                                      final fullName =
+                                          "${ownerFirstNameController.text.trim()} ${ownerLastNameController.text.trim()}"
+                                              .trim();
+                                      if (fullName.isNotEmpty) {
+                                        await SessionPrefs.setUserName(
+                                          fullName,
+                                        );
+                                      }
+                                      if (!context.mounted) return;
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -256,10 +271,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     String label,
     String hint, {
     TextInputType keyboardType = TextInputType.text,
+    TextEditingController? controller,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
-      child: LabeledTextField(label: label, hint: hint, keyboardType: keyboardType),
+      child: LabeledTextField(
+        label: label,
+        hint: hint,
+        keyboardType: keyboardType,
+        controller: controller,
+      ),
     );
   }
 
@@ -368,11 +389,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         Row(
           children: [
             Expanded(
-              child: customField("Owner First Name", "Enter first name"),
+              child: customField(
+                "Owner First Name",
+                "Enter first name",
+                controller: ownerFirstNameController,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: customField("Owner Last Name", "Enter last name"),
+              child: customField(
+                "Owner Last Name",
+                "Enter last name",
+                controller: ownerLastNameController,
+              ),
             ),
           ],
         ),

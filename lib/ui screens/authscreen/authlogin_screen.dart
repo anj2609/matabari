@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
+import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
 import 'package:matabari/widgets/button_screen.dart';
@@ -192,12 +193,15 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
 
                 // /// Login Link
                 InkWell(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await SessionPrefs.setLoggedIn('buyer');
+                    if (!context.mounted) return;
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                         builder: (context) => DashboardScreen(),
                       ),
+                      (route) => false,
                     );
                   },
                   child: RichText(
