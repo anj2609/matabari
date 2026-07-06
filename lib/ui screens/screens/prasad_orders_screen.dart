@@ -34,6 +34,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       [("Coconut", "×2"), ("Chunri", "×1"), ("Bhog Prasad", "×1")],
       1,
       "₹451",
+      "assets/images/Rectangle 931.png",
     ),
     (
       "#PS1253",
@@ -45,6 +46,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       [("Coconut", "×1"), ("Deepdaan", "×2")],
       1,
       "₹651",
+      "assets/images/Rectangle 939.png",
     ),
     (
       "#PS1252",
@@ -56,6 +58,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       [("Chunri", "×1"), ("Bhog Prasad", "×1")],
       0,
       "₹351",
+      "assets/images/Rectangle 949.png",
     ),
     (
       "#PS1251",
@@ -67,6 +70,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       [("Coconut", "×1"), ("Flower", "×1"), ("Bhog Prasad", "×1")],
       0,
       "₹551",
+      "assets/images/Rectangle 959.png",
     ),
     (
       "#PS1250",
@@ -78,6 +82,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       [("Deepdaan", "×1"), ("Chunri", "×1")],
       0,
       "₹301",
+      "assets/images/Rectangle 969.png",
     ),
   ];
 
@@ -130,8 +135,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
                             itemCount: _orders.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 12),
-                            itemBuilder: (context, i) =>
-                                _orderCard(_orders[i]),
+                            itemBuilder: (context, i) => _orderCard(_orders[i]),
                           ),
                         ),
                       ],
@@ -232,34 +236,52 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
     return GestureDetector(
       onTap: () => setState(() => _selectedTab = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFF7A1712) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Badge(
-          backgroundColor: ColorResources.kOrange,
-          offset: const Offset(0, -10),
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          label: Text(
-            count,
-            style: const TextStyle(
-              fontSize: 8,
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: avenirNextCyr.copyWith(
+                  color: selected ? Colors.white : ColorResources.textDark,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: avenirNextCyr.copyWith(
-              color: selected ? Colors.white : ColorResources.textDark,
-              fontSize: 9,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            Positioned(
+              top: -9,
+              right: -8,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 13, minHeight: 13),
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: selected ? Colors.white : ColorResources.kOrange,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  count,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 7,
+                    color: selected ? Colors.black : Colors.white,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -323,6 +345,7 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       List<(String, String)>,
       int,
       String,
+      String,
     )
     order,
   ) {
@@ -336,9 +359,9 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
       items,
       more,
       price,
+      thumbnail,
     ) = order;
     final (badgeBg, badgeFg) = _statusStyles[status]!;
-    final thumbnail = _itemImages[items.first.$1] ?? _itemImages["Coconut"]!;
 
     return Container(
       width: double.infinity,
@@ -378,15 +401,12 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Text(
-                            "Order $id",
-                            overflow: TextOverflow.ellipsis,
-                            style: avenirNextCyr.copyWith(
-                              color: ColorResources.textDark,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                        Text(
+                          "Order $id",
+                          style: avenirNextCyr.copyWith(
+                            color: ColorResources.textDark,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -396,36 +416,42 @@ class _PrasadOrdersScreenState extends State<PrasadOrdersScreen> {
                           color: ColorResources.textLight,
                         ),
                         const Spacer(),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: badgeBg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                status,
-                                style: avenirNextCyr.copyWith(
-                                  color: badgeFg,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w600,
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: badgeBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  status,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: avenirNextCyr.copyWith(
+                                    color: badgeFg,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              "$totalItems items",
-                              style: avenirNextCyr.copyWith(
-                                color: ColorResources.textLight,
-                                fontSize: 8,
+                              const SizedBox(height: 3),
+                              Text(
+                                "$totalItems items",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: avenirNextCyr.copyWith(
+                                  color: ColorResources.textLight,
+                                  fontSize: 8,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
+import 'package:matabari/ui%20screens/screens/earnings_screen.dart';
 import 'package:matabari/ui%20screens/screens/prasad_orders_screen.dart';
+import 'package:matabari/ui%20screens/screens/profile_screen.dart';
 
 /// Dashboard shown to a Prasad Seller after completing registration.
 class SellerDashboardScreen extends StatefulWidget {
@@ -35,12 +37,14 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     return Scaffold(
       backgroundColor: ColorResources.background,
       body: SafeArea(
-        top: currentIndex != 1,
+        top: currentIndex != 1 && currentIndex != 2,
         child: switch (currentIndex) {
           0 => _SellerHomeTab(name: sellerName),
           1 => PrasadOrdersScreen(
             onBack: () => setState(() => currentIndex = 0),
           ),
+          2 => EarningsScreen(onBack: () => setState(() => currentIndex = 0)),
+          3 => const ProfileScreen(),
           _ => _ComingSoonTab(title: _tabTitles[currentIndex]),
         },
       ),
