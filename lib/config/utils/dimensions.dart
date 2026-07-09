@@ -33,7 +33,8 @@ class Dimensions {
   static const double spacingSize16 = 16.0;
   static const double spacingSize11 = 11.0;
   static const double spacingSize40 = 40.0;
-  static const double spacingSize14 = 40.0;
+  static const double spacingSize14 = 14.0;
+  static const double spacingSize22 = 22.0;
   static const double spacingSize45 = 42.0;
   static const double smallSpace = 5.0;
   //static const double hight = 20.0;

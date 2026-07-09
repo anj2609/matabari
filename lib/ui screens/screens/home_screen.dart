@@ -14,6 +14,15 @@ import 'package:matabari/widgets/whywithus_widget.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // Shared red gradient used for primary CTAs across the app (matches the
+  // sign-up/login screens used by the Prasad Seller flow).
+  static const LinearGradient _redGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xffC42118), Color(0xff9D1911), Color(0xff650E07)],
+    stops: [0.0, 0.45, 1.0],
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,10 +36,18 @@ class HomeScreen extends StatelessWidget {
               /// Header
               Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage(
-                      "https://i.pravatar.cc/150?img=12",
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: ColorResources.kOrange.withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: ColorResources.kOrange,
+                      size: 24,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -38,18 +55,25 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Jai Maa Tripura Sundari 🙏",
-                          style: cormorantInfantBold.copyWith(
-                            color: ColorResources.primary,
-                            fontSize: Dimensions.spacingSize18,
+                        ShaderMask(
+                          shaderCallback: (bounds) =>
+                              _redGradient.createShader(bounds),
+                          blendMode: BlendMode.srcIn,
+                          child: Text(
+                            "Jai Maa Tripura Sundari ",
+                            style: avenirNextCyr.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                         Text(
                           "Welcome, Devotee",
-                          style: cormorantInfantRegular.copyWith(
+                          style: avenirNextCyr.copyWith(
                             color: ColorResources.blackColor,
-                            // fontSize: Dimensions.spacingSize18,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -129,23 +153,18 @@ class HomeScreen extends StatelessWidget {
                               "Experience Divine\nBlessings Digitally",
                               style: cormorantInfantBold.copyWith(
                                 color: ColorResources.primary,
-                                fontSize: Dimensions.spacingSize25,
+                                fontSize: 24,
                               ),
-                              // TextStyle(
-                              //   fontSize: 24,
-                              //   fontWeight: FontWeight.bold,
-                              //   color: Colors.white,
-                              //   height: 1.2,
-                              // ),
                             ),
 
                             const SizedBox(height: 8),
 
                             Text(
                               "Book Puja, order prasad &\nattend aarti from anywhere.",
-                              style: cormorantInfantRegular.copyWith(
+                              style: avenirNextCyr.copyWith(
                                 color: ColorResources.blackColor,
-                                fontSize: Dimensions.spacingSize12,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 10,
                               ),
                             ),
 
@@ -156,57 +175,57 @@ class HomeScreen extends StatelessWidget {
                                 // Custom Book Puja Button
                                 InkWell(
                                   onTap: () {},
-                                  borderRadius: BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(5),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 22,
-                                      vertical: 12,
-                                    ),
+                                    width: 80,
+                                    height: 25,
+                                    alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF8B1E1E),
-                                      borderRadius: BorderRadius.circular(30),
+                                      gradient: _redGradient,
+                                      borderRadius: BorderRadius.circular(5),
                                     ),
                                     child: Text(
                                       "Book Puja",
-                                      style: cormorantInfantBold.copyWith(
+                                      style: avenirNextCyr.copyWith(
                                         color: ColorResources.whiteColor,
-                                        fontSize: Dimensions.spacingSize18,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 10,
                                       ),
-                                      // style: TextStyle(
-                                      //   color: Colors.white,
-                                      //   fontWeight: FontWeight.w600,
-                                      // ),
                                     ),
                                   ),
                                 ),
 
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 10),
 
                                 // Custom Watch Aarti Button
                                 InkWell(
                                   onTap: () {},
-                                  borderRadius: BorderRadius.circular(30),
+                                  borderRadius: BorderRadius.circular(5),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 22,
-                                      vertical: 12,
-                                    ),
+                                    width: 80,
+                                    height: 25,
+                                    alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.20),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.20,
+                                      ),
                                       border: Border.all(color: Colors.white),
-                                      borderRadius: BorderRadius.circular(30),
+                                      borderRadius: BorderRadius.circular(5),
                                     ),
                                     child: Text(
                                       "Watch Aarti",
-                                      style: cormorantInfantBold.copyWith(
+                                      style: avenirNextCyr.copyWith(
                                         color: ColorResources.primary,
-                                        fontSize: Dimensions.spacingSize18,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 10,
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
+
+                            const SizedBox(height: 14),
                           ],
                         ),
                       ),
@@ -256,14 +275,15 @@ class HomeScreen extends StatelessWidget {
                     "Upcoming Festivals",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
                   Text(
                     "View All",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.primaryRed,
-                      fontSize: Dimensions.spacingSize18,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -283,14 +303,15 @@ class HomeScreen extends StatelessWidget {
                     "Today's Darshan",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
                   Text(
                     "View All",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.primaryRed,
-                      fontSize: Dimensions.spacingSize18,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -310,14 +331,15 @@ class HomeScreen extends StatelessWidget {
                     "Featured Pujas",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
                   Text(
                     "View All",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.primaryRed,
-                      fontSize: Dimensions.spacingSize18,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -333,14 +355,15 @@ class HomeScreen extends StatelessWidget {
                     "Upcoming Pujas",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
                   Text(
                     "View All",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.primaryRed,
-                      fontSize: Dimensions.spacingSize18,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -364,14 +387,15 @@ class HomeScreen extends StatelessWidget {
                     "Prasad Store",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
                   Text(
                     "View All",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.primaryRed,
-                      fontSize: Dimensions.spacingSize18,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -418,10 +442,17 @@ class HomeScreen extends StatelessWidget {
                     "Pandit Ji",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
-                  Text("View All", style: TextStyle(color: Color(0xFF8B1E1E))),
+                  Text(
+                    "View All",
+                    style: avenirNextCyr.copyWith(
+                      color: const Color(0xFF8B1E1E),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -482,14 +513,15 @@ class HomeScreen extends StatelessWidget {
                     "Devotee Testimonials",
                     style: cormorantInfantBold.copyWith(
                       color: ColorResources.blackColor,
-                      fontSize: Dimensions.spacingSize20,
+                      fontSize: 14,
                     ),
                   ),
                   Text(
                     "View All",
-                    style: cormorantInfantBold.copyWith(
+                    style: avenirNextCyr.copyWith(
                       color: ColorResources.primaryRed,
-                      fontSize: Dimensions.spacingSize18,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -503,27 +535,29 @@ class HomeScreen extends StatelessWidget {
                   "All Right Reserve to",
                   textAlign: TextAlign.center,
                   style: cormorantInfantRegular.copyWith(
-                    color: ColorResources.primary,
-                    fontSize: Dimensions.spacingSize16,
+                    color: ColorResources.secondary,
+                    fontSize: Dimensions.spacingSize12,
                   ),
                 ),
               ),
+
+              const SizedBox(height: 4),
 
               /// Title
               Center(
                 child: Text(
                   "Maa Tripura Sundari Shaktipeeth e-Darshan",
                   textAlign: TextAlign.center,
-                  style: cormorantInfantSemiBold.copyWith(
+                  style: cormorantInfantBold.copyWith(
                     color: ColorResources.primary,
-                    fontSize: Dimensions.spacingSize16,
+                    fontSize: Dimensions.spacingSize18,
                   ),
                 ),
               ),
 
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-              Center(child: Image.asset('assets/images/group.png')),
+              Center(child: Image.asset('assets/images/Frame.png', height: 14)),
               const SizedBox(height: 20),
 
               Center(
@@ -531,11 +565,13 @@ class HomeScreen extends StatelessWidget {
                   "Design & Developed by",
                   textAlign: TextAlign.center,
                   style: cormorantInfantRegular.copyWith(
-                    color: ColorResources.primary,
-                    fontSize: Dimensions.spacingSize16,
+                    color: ColorResources.secondary,
+                    fontSize: Dimensions.spacingSize12,
                   ),
                 ),
               ),
+
+              const SizedBox(height: 4),
 
               /// Title
               Center(
@@ -593,7 +629,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
-
-
 }

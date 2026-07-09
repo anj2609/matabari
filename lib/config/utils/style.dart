@@ -29,3 +29,8 @@ const avenirNextCyr = TextStyle(
   fontFamily: 'AvenirNextCyr',
   fontWeight: FontWeight.w500,
 );
+
+const avenirNextRegular = TextStyle(
+  fontFamily: 'AvenirNextCyr',
+  fontWeight: FontWeight.w400,
+);

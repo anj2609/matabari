@@ -12,30 +12,149 @@ class TodayDarshanWidgets extends StatefulWidget {
 }
 
 class _TodayDarshanWidgetsState extends State<TodayDarshanWidgets> {
+  static const LinearGradient _redGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xffC42118), Color(0xff9D1911), Color(0xff650E07)],
+    stops: [0.0, 0.45, 1.0],
+  );
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bannerHeight = constraints.maxWidth * 0.42;
+        final width = constraints.maxWidth;
+        final bannerHeight = width * 0.55;
 
         return Container(
           height: bannerHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Dimensions.spacingSize18),
           ),
-          child: Stack(
-            children: [
-              /// Background
-              ClipRRect(
-                borderRadius: BorderRadius.circular(Dimensions.spacingSize18),
-                child: Image.asset(
-                  "assets/images/todaydarshan.png",
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(Dimensions.spacingSize18),
+            child: Stack(
+              children: [
+                /// Background
+                Positioned.fill(
+                  child: Image.asset(
+                    "assets/images/todaydarshan.png",
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-            ],
+
+                /// Bottom gradient for text legibility
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: .55),
+                        ],
+                        stops: const [0.5, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+
+                /// View count badge
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ColorResources.kOrange.withValues(alpha: .9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.remove_red_eye_outlined,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "2.3K",
+                          style: avenirNextCyr.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                /// Title, subtitle & Watch Now button
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Divya Darshan",
+                              style: cormorantInfantBold.copyWith(
+                                color: Colors.white,
+                                fontSize: Dimensions.spacingSize20,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Mata Tripura Sundari Shaktipeeth",
+                              style: avenirNextCyr.copyWith(
+                                color: Colors.white.withValues(alpha: .9),
+                                fontWeight: FontWeight.w400,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      InkWell(
+                        onTap: () {},
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: _redGradient,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "Watch Now",
+                            style: avenirNextCyr.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -171,16 +290,22 @@ class PujaBanner extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: width * .032,
-                              backgroundImage: const AssetImage(
-                                "assets/images/user.png",
+                              backgroundColor: const Color(0xFFF3E4D2),
+                              child: Icon(
+                                Icons.person,
+                                color: ColorResources.primary,
+                                size: width * .036,
                               ),
                             ),
                             Positioned(
                               left: width * .045,
                               child: CircleAvatar(
                                 radius: width * .032,
-                                backgroundImage: const AssetImage(
-                                  "assets/images/user.png",
+                                backgroundColor: const Color(0xFFF3E4D2),
+                                child: Icon(
+                                  Icons.person,
+                                  color: ColorResources.primary,
+                                  size: width * .036,
                                 ),
                               ),
                             ),
@@ -188,8 +313,11 @@ class PujaBanner extends StatelessWidget {
                               left: width * .09,
                               child: CircleAvatar(
                                 radius: width * .032,
-                                backgroundImage: const AssetImage(
-                                  "assets/images/user.png",
+                                backgroundColor: const Color(0xFFF3E4D2),
+                                child: Icon(
+                                  Icons.person,
+                                  color: ColorResources.primary,
+                                  size: width * .036,
                                 ),
                               ),
                             ),

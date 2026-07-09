@@ -28,8 +28,28 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
- 
+
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/Tripura Sundari-Photoroom 1.png"
+  min_sdk_android: 21
+  windows:
+    generate: true
+    image_path: "assets/images/Tripura Sundari-Photoroom 1.png"
+  macos:
+    generate: true
+    image_path: "assets/images/Tripura Sundari-Photoroom 1.png"
+  web:
+    generate: true
+    image_path: "assets/images/Tripura Sundari-Photoroom 1.png"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
 
 
 flutter:

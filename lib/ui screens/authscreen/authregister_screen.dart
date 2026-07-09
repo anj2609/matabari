@@ -6,6 +6,7 @@ import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/authscreen/business_details.dart';
+import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
 import 'package:matabari/widgets/formfield.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -26,6 +27,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final ownerFirstNameController = TextEditingController();
   final ownerLastNameController = TextEditingController();
 
+  final devoteeFirstNameController = TextEditingController();
+  final devoteeLastNameController = TextEditingController();
+
   // Shared red gradient (same as the onboarding screens).
   static const LinearGradient _redGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -39,6 +43,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     dobController.dispose();
     ownerFirstNameController.dispose();
     ownerLastNameController.dispose();
+    devoteeFirstNameController.dispose();
+    devoteeLastNameController.dispose();
     super.dispose();
   }
 
@@ -192,6 +198,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                         ),
                                       );
                                     }
+                                  : selectedRole == "Devotee"
+                                  ? () async {
+                                      final fullName =
+                                          "${devoteeFirstNameController.text.trim()} ${devoteeLastNameController.text.trim()}"
+                                              .trim();
+                                      if (fullName.isNotEmpty) {
+                                        await SessionPrefs.setUserName(
+                                          fullName,
+                                        );
+                                      }
+                                      await SessionPrefs.setLoggedIn('buyer');
+                                      if (!context.mounted) return;
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const DashboardScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    }
                                   : null,
                               child: Text(
                                 selectedRole == "Prasad Seller"
@@ -329,9 +356,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       children: [
         Row(
           children: [
-            Expanded(child: customField("First Name", "Enter your first name")),
+            Expanded(
+              child: customField(
+                "First Name",
+                "Enter your first name",
+                controller: devoteeFirstNameController,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: customField("Last Name", "Enter your last name")),
+            Expanded(
+              child: customField(
+                "Last Name",
+                "Enter your last name",
+                controller: devoteeLastNameController,
+              ),
+            ),
           ],
         ),
         customField(

@@ -33,7 +33,7 @@ class WhyBookWithUs extends StatelessWidget {
           // Decorative Line
           SizedBox(height: Dimensions.spacingSize12),
 
-          Image.asset('assets/images/group.png'),
+          Image.asset('assets/images/Frame.png', height: 14),
 
           SizedBox(height: Dimensions.spacingSize20),
 
@@ -41,7 +41,7 @@ class WhyBookWithUs extends StatelessWidget {
             children: [
               Expanded(
                 child: _featureItem(
-                  icon: Icons.shield_outlined,
+                  iconAsset: "assets/images/Security.png",
                   title: "Authentic",
                   subtitle: "Rituals",
                 ),
@@ -51,7 +51,7 @@ class WhyBookWithUs extends StatelessWidget {
 
               Expanded(
                 child: _featureItem(
-                  icon: Icons.groups_outlined,
+                  iconAsset: "assets/images/group.png",
                   title: "Experienced",
                   subtitle: "Purohits",
                 ),
@@ -61,7 +61,7 @@ class WhyBookWithUs extends StatelessWidget {
 
               Expanded(
                 child: _featureItem(
-                  icon: Icons.play_circle_outline,
+                  iconAsset: "assets/images/Youtube.png",
                   title: "Live Puja",
                   subtitle: "Streaming",
                 ),
@@ -74,7 +74,7 @@ class WhyBookWithUs extends StatelessWidget {
   }
 
   static Widget _featureItem({
-    required IconData icon,
+    required String iconAsset,
     required String title,
     required String subtitle,
   }) {
@@ -85,12 +85,13 @@ class WhyBookWithUs extends StatelessWidget {
         Container(
           width: 48,
           height: 48,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: orange.withValues(alpha: .12),
             border: Border.all(color: orange.withValues(alpha: .4)),
           ),
-          child: Icon(icon, color: orange, size: 24),
+          child: Image.asset(iconAsset, width: 24, height: 24),
         ),
 
         const SizedBox(height: 10),

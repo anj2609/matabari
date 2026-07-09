@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
+import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
+import 'package:matabari/ui%20screens/authscreen/authlogin_screen.dart';
 
 /// Seller profile, business/bank details and shop settings shown under
 /// the seller dashboard's "My Profile" tab.
@@ -38,6 +40,13 @@ class ProfileScreen extends StatelessWidget {
     fontSize: 14,
   );
 
+  static const LinearGradient _redGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xffC42118), Color(0xff9D1911), Color(0xff650E07)],
+    stops: [0.0, 0.45, 1.0],
+  );
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -67,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _settingsCard(),
           const SizedBox(height: 14),
-          _accountActionsCard(),
+          _accountActionsCard(context),
         ],
       ),
     );
@@ -97,13 +106,31 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _profileCard() {
-    return _cardDecoration(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3A0F0F), Color(0xFF1C0705)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ColorResources.kGold, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Profile icon kept exactly as before.
               Container(
                 width: 56,
                 height: 56,
@@ -126,7 +153,7 @@ class ProfileScreen extends StatelessWidget {
                     Text(
                       "Member Since: Jan 2024",
                       style: avenirNextCyr.copyWith(
-                        color: ColorResources.textLight,
+                        color: ColorResources.kGold,
                         fontSize: 9,
                       ),
                     ),
@@ -137,17 +164,16 @@ class ProfileScreen extends StatelessWidget {
                           child: Text(
                             "Rakesh Sharma",
                             overflow: TextOverflow.ellipsis,
-                            style: avenirNextCyr.copyWith(
-                              color: ColorResources.textDark,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                            style: cormorantInfantBold.copyWith(
+                              color: Colors.white,
+                              fontSize: 18,
                             ),
                           ),
                         ),
                         const SizedBox(width: 4),
                         const Icon(
                           Icons.verified,
-                          color: Color(0xFF3B82C4),
+                          color: Color(0xFF6EC1FF),
                           size: 15,
                         ),
                       ],
@@ -158,59 +184,57 @@ class ProfileScreen extends StatelessWidget {
               _ratingBadge(),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(
             children: [
-              const Icon(
-                Icons.call_rounded,
-                color: ColorResources.textLight,
-                size: 12,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                "+91 987-654-3210",
-                style: avenirNextCyr.copyWith(
-                  color: ColorResources.textLight,
-                  fontSize: 9,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Icon(
-                Icons.mail_rounded,
-                color: ColorResources.textLight,
-                size: 12,
-              ),
-              const SizedBox(width: 5),
               Expanded(
-                child: Text(
+                child: _glassInfoBadge(Icons.call_rounded, "+91 987-654-3210"),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _glassInfoBadge(
+                  Icons.mail_rounded,
                   "panditrajesh@gmail.com",
-                  overflow: TextOverflow.ellipsis,
-                  style: avenirNextCyr.copyWith(
-                    color: ColorResources.textLight,
-                    fontSize: 9,
-                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(
-                Icons.edit_outlined,
-                color: ColorResources.kOrange,
-                size: 12,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "Edit Profile",
-                style: avenirNextCyr.copyWith(
-                  color: ColorResources.kOrange,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: () {},
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  gradient: _redGradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.white,
+                      size: 13,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      "Edit Profile",
+                      style: avenirNextCyr.copyWith(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -219,10 +243,10 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _ratingBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: ColorResources.kOrange.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -230,15 +254,47 @@ class ProfileScreen extends StatelessWidget {
           const Icon(
             Icons.star_rounded,
             color: ColorResources.kOrange,
-            size: 12,
+            size: 13,
           ),
           const SizedBox(width: 3),
           Text(
-            "4.8 Ratings",
+            "4.8",
             style: avenirNextCyr.copyWith(
               color: ColorResources.textDark,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glassInfoBadge(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6D1F1F), Color(0xFF4A1414)],
+        ),
+        border: Border.all(color: ColorResources.kGold, width: 0.8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: ColorResources.kGold, size: 13),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              style: avenirNextCyr.copyWith(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -453,7 +509,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _accountActionsCard() {
+  Widget _accountActionsCard(BuildContext context) {
     return _cardDecoration(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 14),
       child: Column(
@@ -462,15 +518,74 @@ class ProfileScreen extends StatelessWidget {
             icon: 'assets/images/Headphones.png',
             title: "Logout",
             subtitle: "Sign out from your account",
+            onTap: () => _confirmLogout(context),
           ),
           _thinHorizontalDivider(),
           _actionRow(
             icon: 'assets/images/Shield.png',
             title: "Delete Account",
             subtitle: "Permanently delete your account & all data",
+            onTap: () {},
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: ColorResources.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "Logout",
+          style: cormorantInfantBold.copyWith(
+            color: ColorResources.textDark,
+            fontSize: 18,
+          ),
+        ),
+        content: Text(
+          "Are you sure you want to sign out of your account?",
+          style: avenirNextCyr.copyWith(
+            color: ColorResources.textLight,
+            fontSize: 12,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              "Cancel",
+              style: avenirNextCyr.copyWith(
+                color: ColorResources.textDark,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              "Logout",
+              style: avenirNextCyr.copyWith(
+                color: ColorResources.primaryRed,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    await SessionPrefs.logout();
+    if (!context.mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthLoginScreen()),
+      (route) => false,
     );
   }
 
@@ -478,9 +593,10 @@ class ProfileScreen extends StatelessWidget {
     required String icon,
     required String title,
     required String subtitle,
+    required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(

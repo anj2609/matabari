@@ -4,6 +4,7 @@ import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/controller/allpuja_controller.dart';
+import 'package:matabari/ui screens/screens/puja_detail_screen.dart';
 
 class PujaScreen extends StatelessWidget {
   PujaScreen({super.key});
@@ -13,16 +14,18 @@ class PujaScreen extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: ColorResources.bgColors,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
+        child: SizedBox.expand(
+          child: Stack(
+            children: [
             Container(
               height: 190,
               width: double.infinity,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [ColorResources.primary, ColorResources.textRedColor],
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/Group 31.png'),
+                  fit: BoxFit.cover,
                 ),
               ),
               child: Padding(
@@ -33,47 +36,61 @@ class PujaScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // circleIcon(Icons.arrow_back_ios_new),
-                        // const Spacer(),
+                        GestureDetector(
+                          onTap: () => Get.back(),
+                          child: Image.asset(
+                            'assets/images/Rectangle 689.png',
+                            height: 24,
+                            width: 24,
+                          ),
+                        ),
                         Text(
                           "Puja Seva",
                           style: cormorantInfantBold.copyWith(
-                            color: ColorResources.kOrange,
-                            fontSize: Dimensions.spacingSize14,
+                            color: Colors.white,
+                            fontSize: Dimensions.spacingSize22,
                           ),
                         ),
-
-                        //circleIcon(Icons.search),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Image.asset(
+                            'assets/images/Icon (1).png',
+                            height: 24,
+                            width: 24,
+                          ),
+                        ),
                       ],
                     ),
 
                     SizedBox(height: Dimensions.fontSizeSmall),
 
-                    Text(
-                      "Book authentic pujas at",
-                      style: cormorantInfantBold.copyWith(
-                        color: ColorResources.kOrange,
-                        fontSize: Dimensions.spacingSize16,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    Text(
-                      "Mata Tripura Sundari Shaktipeeth",
-                      style: cormorantInfantBold.copyWith(
-                        color: ColorResources.kOrange,
-                        fontSize: Dimensions.spacingSize16,
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [
+                          Color(0xFFFABB46),
+                          Color(0xFFFEF39E),
+                          Color(0xFFF2C639),
+                        ],
+                        stops: [0.0, 0.5, 1.0],
+                      ).createShader(bounds),
+                      child: Text(
+                        "Book authentic pujas at\nMata Tripura Sundari Shaktipeeth",
+                        textAlign: TextAlign.center,
+                        style: avenirNextCyr.copyWith(
+                          color: Colors.white,
+                          fontSize: Dimensions.fontSizeSmall,
+                        ),
                       ),
                     ),
 
                     SizedBox(height: 15),
 
                     Image.asset(
-                      'assets/images/group.png',
-                      color: ColorResources.kOrange,
+                      'assets/images/Frame.png',
+                      height: 14,
+                      color: const Color(0xFFFEF39E),
                     ),
                   ],
                 ),
@@ -81,7 +98,11 @@ class PujaScreen extends StatelessWidget {
             ),
 
             /// BODY
-           Expanded(
+           Positioned(
+  top: 160,
+  left: 0,
+  right: 0,
+  bottom: 0,
   child: Container(
     decoration: const BoxDecoration(
       color: Color(0xffF8F5F0),
@@ -92,23 +113,23 @@ class PujaScreen extends StatelessWidget {
         const SizedBox(height: 18),
 
         /// CATEGORY (NO Expanded HERE)
-        SizedBox(
-          height: 90,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GetBuilder<AllPujaController>(
             builder: (controller) {
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: controller.categories.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(
+                  controller.categories.length,
+                  (index) => GestureDetector(
                     onTap: () => controller.changeCategory(index),
                     child: category(
                       icon: controller.categories[index]['icon'],
                       title: controller.categories[index]['title'],
                       selected: controller.selectedCategory == index,
                     ),
-                  );
-                },
+                  ),
+                ),
               );
             },
           ),
@@ -124,12 +145,47 @@ class PujaScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("All Pujas", style: cormorantInfantBold),
-                  Text("86 Pujas", style: cormorantInfantRegular),
+                  Text(
+                    "All Pujas",
+                    style: cormorantInfantBold.copyWith(
+                      fontSize: 14.0,
+                      color: ColorResources.blackColor,
+                    ),
+                  ),
+                  Text(
+                    "86 Pujas",
+                    style: avenirNextCyr.copyWith(
+                      fontSize: 10.0,
+                      color: ColorResources.blackColor,
+                    ),
+                  ),
                 ],
               ),
               const Spacer(),
-              const Text("Sort by Popular"),
+              Row(
+                children: [
+                  Text(
+                    "Sort by ",
+                    style: avenirNextCyr.copyWith(
+                      fontSize: 10.0,
+                      color: ColorResources.blackColor,
+                    ),
+                  ),
+                  Text(
+                    "Popular",
+                    style: avenirNextCyr.copyWith(
+                      fontSize: 10.0,
+                      color: const Color(0xFFDF7004),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 16,
+                    color: Color(0xFFDF7004),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -154,6 +210,12 @@ class PujaScreen extends StatelessWidget {
                     image: item['image'] ?? '',
                     price: item['price'] ?? '',
                     duration: item['duration'] ?? '',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PujaDetailScreen(puja: item),
+                      ),
+                    ),
                   );
                 },
               );
@@ -166,6 +228,7 @@ class PujaScreen extends StatelessWidget {
 )
          
           ],
+        ),
         ),
       ),
     );
@@ -184,12 +247,11 @@ class PujaScreen extends StatelessWidget {
   }
 
   Widget category({
-    required IconData icon,
+    required String icon,
     required String title,
     bool selected = false,
   }) {
     return Container(
-      margin: EdgeInsets.only(right: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -200,22 +262,17 @@ class PujaScreen extends StatelessWidget {
               color: selected ? const Color(0xff8F1206) : Colors.white,
               borderRadius: BorderRadius.circular(18),
             ),
-            child: Icon(icon, color: selected ? Colors.white : Colors.orange),
-          ),
-          SizedBox(height: 5),
-          SizedBox(
-            width: 65,
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: cormorantInfantBold.copyWith(
-                color: ColorResources.blackColor,
-                fontSize: Dimensions.spacingSize12,
+            child: Center(
+              child: Image.asset(
+                icon,
+                height: 29,
+                width: 44,
+                fit: BoxFit.contain,
+                color: selected ? Colors.white : Colors.orange,
               ),
             ),
           ),
+
         ],
       ),
     );
@@ -228,6 +285,7 @@ class PujaCard extends StatelessWidget {
   final String image;
   final String price;
   final String duration;
+  final VoidCallback onTap;
 
   const PujaCard({
     super.key,
@@ -236,12 +294,14 @@ class PujaCard extends StatelessWidget {
     required this.image,
     required this.price,
     required this.duration,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.25,
+      width: 378,
+      constraints: const BoxConstraints(minHeight: 131),
       margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -259,7 +319,8 @@ class PujaCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 110,
+                width: 134,
+                height: 121,
                 margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
@@ -274,41 +335,40 @@ class PujaCard extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(
                     left: 4,
-                    top: 12,
-                    bottom: 12,
-                    right: 80,
+                    top: 8,
+                    bottom: 8,
+                    right: 20,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
-                        maxLines: 2,
                         style: cormorantInfantBold.copyWith(
                           color: ColorResources.blackColor,
-                          fontSize: Dimensions.spacingSize20,
+                          fontSize: Dimensions.spacingSize16,
                         ),
                       ),
 
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
 
                       Text(
                         description,
-                        maxLines: 2,
-                        style: cormorantInfantRegular.copyWith(
+                        style: avenirNextRegular.copyWith(
                           color: ColorResources.blackColor,
-                          fontSize: Dimensions.spacingSize18,
+                          fontSize: Dimensions.fontSizeSmall,
                         ),
                       ),
 
                       //Spacer(),
-                      SizedBox(height: Dimensions.hight13),
+                      const SizedBox(height: 6),
 
-                      Row(
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 4,
                         children: [
                           _chip(Icons.access_time, duration),
-                          SizedBox(width: 5),
-                          _chip(Icons.live_tv, duration),
+                          _chip(Icons.live_tv, "Video Available"),
                         ],
                       ),
                     ],
@@ -321,17 +381,20 @@ class PujaCard extends StatelessWidget {
           Positioned(
             right: 10,
             top: 10,
-            child: Container(
-              height: 38,
-              width: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE07A00),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 20,
+            child: GestureDetector(
+              onTap: onTap,
+              child: Container(
+                height: 30,
+                width: 30,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE07A00),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.arrow_forward,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
             ),
           ),
@@ -340,12 +403,12 @@ class PujaCard extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.2,
-              height: MediaQuery.of(context).size.height * 0.045,
+              width: 52,
+              height: 34,
               decoration: const BoxDecoration(
                 color: Color(0xFFE07A00),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(22),
+                  topLeft: Radius.circular(18),
                   bottomRight: Radius.circular(22),
                 ),
               ),
@@ -354,7 +417,7 @@ class PujaCard extends StatelessWidget {
                   price,
                   style: cormorantInfantBold.copyWith(
                     color: ColorResources.whiteColor,
-                    fontSize: Dimensions.spacingSize18,
+                    fontSize: Dimensions.spacingSize14,
                   ),
                 ),
               ),
@@ -367,20 +430,21 @@ class PujaCard extends StatelessWidget {
 
   Widget _chip(IconData icon, String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+      padding: EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
         color: Color(0xFFFFF4E6),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 9, color: Colors.orange),
-          SizedBox(width: 3),
+          Icon(icon, size: 8, color: Colors.orange),
+          SizedBox(width: 2),
           Text(
             text,
             style: cormorantInfantBold.copyWith(
               color: ColorResources.kOrange,
-              fontSize: Dimensions.spacingSize12,
+              fontSize: Dimensions.spacingSize11,
             ),
           ),
         ],
