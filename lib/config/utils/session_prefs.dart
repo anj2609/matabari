@@ -46,4 +46,13 @@ class SessionPrefs {
     await prefs.remove(_roleKey);
     await prefs.remove(_nameKey);
   }
+
+  /// Permanently wipes all locally stored data for this account. Since the
+  /// app has no backend user store, this local cache is the account - so
+  /// clearing every key (not just the session ones) is what "delete
+  /// account" actually means here.
+  static Future<void> deleteAccount() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }
