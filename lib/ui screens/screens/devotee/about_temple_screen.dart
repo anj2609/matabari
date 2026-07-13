@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
-import 'package:matabari/ui%20screens/screens/e_darshan_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/e_darshan_screen.dart';
 import 'package:matabari/widgets/bottom_nav_bar.dart';
 
 class AboutTempleScreen extends StatelessWidget {
@@ -47,119 +47,139 @@ class AboutTempleScreen extends StatelessWidget {
         onTap: (index) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox.expand(
+          child: Stack(
             children: [
-              _header(context),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _heroCard(),
+              Container(
+                height: 190,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Group 31.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: Container(
+                              height: 34,
+                              width: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: .2),
+                              ),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Mata Tripura Sundari",
+                                  textAlign: TextAlign.center,
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize20,
+                                  ),
+                                ),
+                                Text(
+                                  "Shaktipeeth e-Darshan",
+                                  textAlign: TextAlign.center,
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize20,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _notify(context, "Sharing temple details"),
+                            child: Container(
+                              height: 34,
+                              width: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: .2),
+                              ),
+                              child: const Icon(Icons.share_outlined, color: Colors.white, size: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 20),
 
-              _sectionTitle("About the Temple"),
-              const SizedBox(height: 8),
-              _aboutCard(),
-              const SizedBox(height: 20),
+              /// BODY
+              Positioned(
+                top: 160,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffF8F5F0),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(0, 18, 0, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _heroCard(),
+                        ),
+                        const SizedBox(height: 20),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _eDarshanCard(context),
+                        _sectionTitle("About the Temple"),
+                        const SizedBox(height: 8),
+                        _aboutCard(),
+                        const SizedBox(height: 20),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _eDarshanCard(context),
+                        ),
+                        const SizedBox(height: 20),
+
+                        _sectionHeader("Temple Gallery"),
+                        const SizedBox(height: 10),
+                        _galleryRow(),
+                        const SizedBox(height: 20),
+
+                        _sectionTitle("Spiritual Significance"),
+                        const SizedBox(height: 10),
+                        _significanceRow(),
+                        const SizedBox(height: 20),
+
+                        _sectionTitle("Temple Timings"),
+                        const SizedBox(height: 10),
+                        _timingsCard(),
+                        const SizedBox(height: 20),
+
+                        _sectionTitle("Location"),
+                        const SizedBox(height: 10),
+                        _locationCard(),
+                        const SizedBox(height: 16),
+
+                        _contactFooter(context),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 20),
-
-              _sectionHeader("Temple Gallery"),
-              const SizedBox(height: 10),
-              _galleryRow(),
-              const SizedBox(height: 20),
-
-              _sectionTitle("Spiritual Significance"),
-              const SizedBox(height: 10),
-              _significanceRow(),
-              const SizedBox(height: 20),
-
-              _sectionTitle("Temple Timings"),
-              const SizedBox(height: 10),
-              _timingsCard(),
-              const SizedBox(height: 20),
-
-              _sectionTitle("Location"),
-              const SizedBox(height: 10),
-              _locationCard(),
-              const SizedBox(height: 16),
-
-              _contactFooter(context),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// ---------------- HEADER ----------------
-  Widget _header(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-      decoration: const BoxDecoration(
-        gradient: _redGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.maybePop(context),
-            child: Container(
-              height: 34,
-              width: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: .2),
-              ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  "Mata Tripura Sundari",
-                  textAlign: TextAlign.center,
-                  style: cormorantInfantBold.copyWith(
-                    color: Colors.white,
-                    fontSize: Dimensions.spacingSize20,
-                  ),
-                ),
-                Text(
-                  "Shaktipeeth e-Darshan",
-                  textAlign: TextAlign.center,
-                  style: cormorantInfantBold.copyWith(
-                    color: Colors.white,
-                    fontSize: Dimensions.spacingSize20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _notify(context, "Sharing temple details"),
-            child: Container(
-              height: 34,
-              width: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: .2),
-              ),
-              child: const Icon(Icons.share_outlined, color: Colors.white, size: 15),
-            ),
-          ),
-        ],
       ),
     );
   }

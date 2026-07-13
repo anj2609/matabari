@@ -111,83 +111,103 @@ class RecentActivityScreen extends StatelessWidget {
         onTap: (index) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox.expand(
+          child: Stack(
             children: [
-              _header(context),
-              const SizedBox(height: 16),
-              for (final group in _activityGroups) ...[
-                _dateHeader(group['date'] as String),
-                const SizedBox(height: 8),
-                ...(group['items'] as List<Map<String, String>>).map(_activityRow),
-                const SizedBox(height: 14),
-              ],
+              Container(
+                height: 190,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Group 31.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: Container(
+                              height: 34,
+                              width: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: .2),
+                              ),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Recent Activity",
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize22,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Your recent bookings & activity",
+                                  style: avenirNextRegular.copyWith(
+                                    color: Colors.white70,
+                                    fontSize: Dimensions.fontSizeSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            height: 34,
+                            width: 34,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: .2),
+                            ),
+                            child: const Icon(Icons.history, color: Colors.white, size: 16),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              /// BODY
+              Positioned(
+                top: 160,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffF8F5F0),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(0, 18, 0, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final group in _activityGroups) ...[
+                          _dateHeader(group['date'] as String),
+                          const SizedBox(height: 8),
+                          ...(group['items'] as List<Map<String, String>>).map(_activityRow),
+                          const SizedBox(height: 14),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// ---------------- HEADER ----------------
-  Widget _header(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-      decoration: const BoxDecoration(
-        gradient: _redGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.maybePop(context),
-            child: Container(
-              height: 34,
-              width: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: .2),
-              ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  "Recent Activity",
-                  style: cormorantInfantBold.copyWith(
-                    color: Colors.white,
-                    fontSize: Dimensions.spacingSize22,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Your recent bookings & activity",
-                  style: avenirNextRegular.copyWith(
-                    color: Colors.white70,
-                    fontSize: Dimensions.fontSizeSmall,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 34,
-            width: 34,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: .2),
-            ),
-            child: const Icon(Icons.history, color: Colors.white, size: 16),
-          ),
-        ],
       ),
     );
   }

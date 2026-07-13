@@ -1,9 +1,9 @@
-import 'dart:math';
+﻿import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/style.dart';
-import 'package:matabari/ui%20screens/screens/product_wise_sale_screen.dart';
+import 'package:matabari/ui%20screens/screens/prasad_seller/product_wise_sale_screen.dart';
 
 /// Earnings & settlement summary shown under the seller dashboard's
 /// "Earnings" tab.

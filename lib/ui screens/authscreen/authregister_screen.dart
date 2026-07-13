@@ -1,4 +1,4 @@
-import 'dart:ui' show ImageFilter;
+﻿import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
@@ -6,7 +6,8 @@ import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/authscreen/business_details.dart';
-import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/dashbboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/pandit_ji/pandit_dashboard_screen.dart';
 import 'package:matabari/widgets/formfield.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -30,6 +31,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final devoteeFirstNameController = TextEditingController();
   final devoteeLastNameController = TextEditingController();
 
+  final panditFirstNameController = TextEditingController();
+  final panditLastNameController = TextEditingController();
+
   // Shared red gradient (same as the onboarding screens).
   static const LinearGradient _redGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -45,6 +49,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     ownerLastNameController.dispose();
     devoteeFirstNameController.dispose();
     devoteeLastNameController.dispose();
+    panditFirstNameController.dispose();
+    panditLastNameController.dispose();
     super.dispose();
   }
 
@@ -215,6 +221,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               const DashboardScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    }
+                                  : selectedRole == "Pandit Ji"
+                                  ? () async {
+                                      final fullName =
+                                          "${panditFirstNameController.text.trim()} ${panditLastNameController.text.trim()}"
+                                              .trim();
+                                      if (fullName.isNotEmpty) {
+                                        await SessionPrefs.setUserName(
+                                          fullName,
+                                        );
+                                      }
+                                      await SessionPrefs.setLoggedIn('pandit');
+                                      if (!context.mounted) return;
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const PanditDashboardScreen(),
                                         ),
                                         (route) => false,
                                       );
@@ -393,9 +420,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       children: [
         Row(
           children: [
-            Expanded(child: customField("First Name", "Enter your first name")),
+            Expanded(
+              child: customField(
+                "First Name",
+                "Enter your first name",
+                controller: panditFirstNameController,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: customField("Last Name", "Enter your last name")),
+            Expanded(
+              child: customField(
+                "Last Name",
+                "Enter your last name",
+                controller: panditLastNameController,
+              ),
+            ),
           ],
         ),
         Row(

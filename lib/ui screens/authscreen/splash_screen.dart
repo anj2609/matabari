@@ -1,11 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/onboarding_prefs.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/ui%20screens/authscreen/onboarding_screen.dart';
 import 'package:matabari/ui%20screens/authscreen/authlogin_screen.dart';
-import 'package:matabari/ui%20screens/screens/dashbboard_screen.dart';
-import 'package:matabari/ui%20screens/screens/seller_dashboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/dashbboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/pandit_ji/pandit_dashboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/prasad_seller/seller_dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -56,9 +57,11 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, animation, __) => role == 'seller'
-                ? const SellerDashboardScreen()
-                : const DashboardScreen(),
+            pageBuilder: (_, animation, __) => switch (role) {
+              'seller' => const SellerDashboardScreen(),
+              'pandit' => const PanditDashboardScreen(),
+              _ => const DashboardScreen(),
+            },
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(opacity: animation, child: child);
             },

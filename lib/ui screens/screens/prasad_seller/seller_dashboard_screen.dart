@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
-import 'package:matabari/ui%20screens/screens/earnings_screen.dart';
-import 'package:matabari/ui%20screens/screens/prasad_orders_screen.dart';
-import 'package:matabari/ui%20screens/screens/profile_screen.dart';
+import 'package:matabari/ui%20screens/screens/prasad_seller/earnings_screen.dart';
+import 'package:matabari/ui%20screens/screens/prasad_seller/prasad_orders_screen.dart';
+import 'package:matabari/ui%20screens/screens/prasad_seller/profile_screen.dart';
 
 /// Dashboard shown to a Prasad Seller after completing registration.
 class SellerDashboardScreen extends StatefulWidget {

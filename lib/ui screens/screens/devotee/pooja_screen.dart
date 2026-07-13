@@ -4,7 +4,7 @@ import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/controller/allpuja_controller.dart';
-import 'package:matabari/ui screens/screens/puja_detail_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/puja_detail_screen.dart';
 
 class PujaScreen extends StatelessWidget {
   PujaScreen({super.key});

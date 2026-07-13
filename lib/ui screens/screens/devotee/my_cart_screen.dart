@@ -134,141 +134,160 @@ class _MyCartScreenState extends State<MyCartScreen> {
         onTap: (index) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox.expand(
+          child: Stack(
             children: [
-              _header(),
-              const SizedBox(height: 18),
-
-              _sectionHeader(
-                "Selected Puja",
-                trailing: selectedPuja == null
-                    ? null
-                    : GestureDetector(
-                        onTap: () => setState(() => selectedPuja = null),
-                        child: Text(
-                          "Delete",
-                          style: avenirNextCyr.copyWith(
-                            color: const Color(0xFFE07A00),
-                            fontSize: Dimensions.fontSizeDefault,
-                          ),
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 10),
-              if (selectedPuja != null)
-                _pujaCard(selectedPuja!)
-              else
-                _emptyRow("No puja selected"),
-              const SizedBox(height: 20),
-
-              _sectionHeader(
-                "Your Offerings ($_offeringCount)",
-                trailing: GestureDetector(
-                  onTap: () => Navigator.maybePop(context),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+              Container(
+                height: 190,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Group 31.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
                     children: [
-                      Text(
-                        "Add More",
-                        style: avenirNextCyr.copyWith(
-                          color: const Color(0xFFE07A00),
-                          fontSize: Dimensions.fontSizeDefault,
-                        ),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: Container(
+                              height: 34,
+                              width: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: .2),
+                              ),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "My Cart",
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize22,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Review your selected offerings",
+                                  style: avenirNextRegular.copyWith(
+                                    color: Colors.white70,
+                                    fontSize: Dimensions.fontSizeSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _confirmClearCart,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: .18),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.delete_outline, color: Colors.white, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "Clear Cart",
+                                    style: avenirNextCyr.copyWith(color: Colors.white, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const Icon(Icons.add, size: 16, color: Color(0xFFE07A00)),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              if (_offeringCount == 0)
-                _emptyRow("No offerings added")
-              else
-                ...offerings.map(_offeringRow),
-              const SizedBox(height: 20),
 
-              _priceDetails(),
-              const SizedBox(height: 14),
-              _trustFooter(),
+              /// BODY
+              Positioned(
+                top: 160,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffF8F5F0),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(0, 18, 0, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionHeader(
+                          "Selected Puja",
+                          trailing: selectedPuja == null
+                              ? null
+                              : GestureDetector(
+                                  onTap: () => setState(() => selectedPuja = null),
+                                  child: Text(
+                                    "Delete",
+                                    style: avenirNextCyr.copyWith(
+                                      color: const Color(0xFFE07A00),
+                                      fontSize: Dimensions.fontSizeDefault,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (selectedPuja != null)
+                          _pujaCard(selectedPuja!)
+                        else
+                          _emptyRow("No puja selected"),
+                        const SizedBox(height: 20),
+
+                        _sectionHeader(
+                          "Your Offerings ($_offeringCount)",
+                          trailing: GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Add More",
+                                  style: avenirNextCyr.copyWith(
+                                    color: const Color(0xFFE07A00),
+                                    fontSize: Dimensions.fontSizeDefault,
+                                  ),
+                                ),
+                                const Icon(Icons.add, size: 16, color: Color(0xFFE07A00)),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (_offeringCount == 0)
+                          _emptyRow("No offerings added")
+                        else
+                          ...offerings.map(_offeringRow),
+                        const SizedBox(height: 20),
+
+                        _priceDetails(),
+                        const SizedBox(height: 14),
+                        _trustFooter(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// ---------------- HEADER ----------------
-  Widget _header() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      decoration: const BoxDecoration(
-        gradient: _redGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.maybePop(context),
-            child: Container(
-              height: 34,
-              width: 34,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: .2),
-              ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  "My Cart",
-                  style: cormorantInfantBold.copyWith(
-                    color: Colors.white,
-                    fontSize: Dimensions.spacingSize22,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Review your selected offerings",
-                  style: avenirNextRegular.copyWith(
-                    color: Colors.white70,
-                    fontSize: Dimensions.fontSizeSmall,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: _confirmClearCart,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .18),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.delete_outline, color: Colors.white, size: 14),
-                  const SizedBox(width: 4),
-                  Text(
-                    "Clear Cart",
-                    style: avenirNextCyr.copyWith(color: Colors.white, fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/authscreen/authlogin_screen.dart';
-import 'package:matabari/ui%20screens/screens/about_temple_screen.dart';
-import 'package:matabari/ui%20screens/screens/e_darshan_screen.dart';
-import 'package:matabari/ui%20screens/screens/family_member_screen.dart';
-import 'package:matabari/ui%20screens/screens/help_support_screen.dart';
-import 'package:matabari/ui%20screens/screens/my_cart_screen.dart';
-import 'package:matabari/ui%20screens/screens/my_puja_bookings_screen.dart';
-import 'package:matabari/ui%20screens/screens/recent_activity_screen.dart';
-import 'package:matabari/ui%20screens/screens/saved_collection_screen.dart';
-import 'package:matabari/ui%20screens/screens/terms_privacy_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/about_temple_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/e_darshan_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/family_member_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/help_support_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/my_cart_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/my_puja_bookings_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/recent_activity_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/saved_collection_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/terms_privacy_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});

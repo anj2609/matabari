@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
-import 'package:matabari/ui%20screens/screens/puja_detail_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/puja_detail_screen.dart';
 import 'package:matabari/widgets/bottom_nav_bar.dart';
 
 class SavedCollectionScreen extends StatefulWidget {
@@ -103,126 +103,153 @@ class _SavedCollectionScreenState extends State<SavedCollectionScreen> {
         onTap: (index) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox.expand(
+          child: Stack(
             children: [
-              _header(),
-              const SizedBox(height: 16),
-              _statsRow(),
-              const SizedBox(height: 20),
-
-              if (showAarti) ...[
-                _sectionHeader("Recently Saved"),
-                const SizedBox(height: 10),
-                _squareRow(visibleRecentlySaved),
-                const SizedBox(height: 20),
-
-                _sectionHeader("Favourite Aartis"),
-                const SizedBox(height: 10),
-                _squareRow(visibleFavouriteAartis),
-                const SizedBox(height: 20),
-              ],
-
-              if (showPuja) ...[
-                _sectionHeader("Saved Pujas"),
-                const SizedBox(height: 10),
-                if (visibleSavedPujas.isEmpty)
-                  _emptyRow("No saved pujas")
-                else
-                  ...visibleSavedPujas.map(_pujaCard),
-                const SizedBox(height: 20),
-              ],
-
-              if (showOfferings) ...[
-                _sectionHeader("Saved Offerings"),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _offeringsRow(),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// ---------------- HEADER ----------------
-  Widget _header() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-      decoration: const BoxDecoration(
-        gradient: _redGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.maybePop(context),
-                child: Container(
-                  height: 34,
-                  width: 34,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: .2),
-                  ),
-                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      "Saved Collection",
-                      style: cormorantInfantBold.copyWith(
-                        color: Colors.white,
-                        fontSize: Dimensions.spacingSize22,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "Your saved puja and offerings",
-                      style: avenirNextRegular.copyWith(
-                        color: Colors.white70,
-                        fontSize: Dimensions.fontSizeSmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Container(
-                height: 34,
-                width: 34,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: .2),
+                height: 190,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Group 31.png'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                child: const Icon(Icons.favorite, color: Colors.white, size: 16),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: Container(
+                              height: 34,
+                              width: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: .2),
+                              ),
+                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 16),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Saved Collection",
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize22,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Your saved puja and offerings",
+                                  style: avenirNextRegular.copyWith(
+                                    color: Colors.white70,
+                                    fontSize: Dimensions.fontSizeSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            height: 34,
+                            width: 34,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: .2),
+                            ),
+                            child: const Icon(Icons.favorite, color: Colors.white, size: 16),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              /// BODY
+              Positioned(
+                top: 160,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffF8F5F0),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 18),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: const Color(0xffF3D8B3)),
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: Row(
+                            children: List.generate(4, (index) => _tabButton(index)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _statsRow(),
+                              const SizedBox(height: 20),
+
+                              if (showAarti) ...[
+                                _sectionHeader("Recently Saved"),
+                                const SizedBox(height: 10),
+                                _squareRow(visibleRecentlySaved),
+                                const SizedBox(height: 20),
+
+                                _sectionHeader("Favourite Aartis"),
+                                const SizedBox(height: 10),
+                                _squareRow(visibleFavouriteAartis),
+                                const SizedBox(height: 20),
+                              ],
+
+                              if (showPuja) ...[
+                                _sectionHeader("Saved Pujas"),
+                                const SizedBox(height: 10),
+                                if (visibleSavedPujas.isEmpty)
+                                  _emptyRow("No saved pujas")
+                                else
+                                  ...visibleSavedPujas.map(_pujaCard),
+                                const SizedBox(height: 20),
+                              ],
+
+                              if (showOfferings) ...[
+                                _sectionHeader("Saved Offerings"),
+                                const SizedBox(height: 10),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: _offeringsRow(),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: Row(
-              children: List.generate(4, (index) => _tabButton(index)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

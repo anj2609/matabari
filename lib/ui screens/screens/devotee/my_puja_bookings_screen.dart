@@ -87,112 +87,138 @@ class _MyPujaBookingsScreenState extends State<MyPujaBookingsScreen> {
         onTap: (index) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox.expand(
+          child: Stack(
             children: [
-              _header(),
-              const SizedBox(height: 18),
-
-              if (selectedTab == 0) ...[
-                _sectionHeader("Upcoming Pujas", upcomingBookings.length),
-                const SizedBox(height: 10),
-                ...upcomingBookings.map((b) => _bookingCard(b, upcoming: true)),
-              ] else if (selectedTab == 1) ...[
-                _sectionHeader("Completed Pujas", completedBookings.length),
-                const SizedBox(height: 10),
-                ...completedBookings.map((b) => _bookingCard(b, upcoming: false)),
-              ] else ...[
-                _sectionHeader("Cancelled Pujas", cancelledBookings.length),
-                const SizedBox(height: 10),
-                if (cancelledBookings.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
-                    child: Center(
-                      child: Text(
-                        "No cancelled pujas",
-                        style: avenirNextRegular.copyWith(
-                          color: ColorResources.textLight,
-                          fontSize: Dimensions.fontSizeDefault,
-                        ),
-                      ),
-                    ),
+              Container(
+                height: 190,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Group 31.png'),
+                    fit: BoxFit.cover,
                   ),
-                ...cancelledBookings.map((b) => _bookingCard(b, upcoming: false)),
-              ],
-
-              const SizedBox(height: 8),
-              if (activeList.isNotEmpty) const SizedBox(height: 4),
-              _statsRow(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// ---------------- HEADER ----------------
-  Widget _header() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-      decoration: const BoxDecoration(
-        gradient: _redGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _circleIconButton(
-                icon: Icons.arrow_back,
-                onTap: () => Navigator.maybePop(context),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      "My Puja Bookings",
-                      style: cormorantInfantBold.copyWith(
-                        color: Colors.white,
-                        fontSize: Dimensions.spacingSize22,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _circleIconButton(
+                            icon: Icons.arrow_back,
+                            onTap: () => Navigator.maybePop(context),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "My Puja Bookings",
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize22,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Track upcoming & completed puja",
+                                  style: avenirNextRegular.copyWith(
+                                    color: Colors.white70,
+                                    fontSize: Dimensions.fontSizeSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _circleIconButton(
+                            icon: Icons.ios_share,
+                            onTap: () => _notify("Sharing your booking history"),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "Track upcoming & completed puja",
-                      style: avenirNextRegular.copyWith(
-                        color: Colors.white70,
-                        fontSize: Dimensions.fontSizeSmall,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              _circleIconButton(
-                icon: Icons.ios_share,
-                onTap: () => _notify("Sharing your booking history"),
+
+              /// BODY
+              Positioned(
+                top: 160,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffF8F5F0),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 18),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: const Color(0xffF3D8B3)),
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: Row(
+                            children: List.generate(3, (index) => _tabButton(index)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (selectedTab == 0) ...[
+                                _sectionHeader("Upcoming Pujas", upcomingBookings.length),
+                                const SizedBox(height: 10),
+                                ...upcomingBookings.map((b) => _bookingCard(b, upcoming: true)),
+                              ] else if (selectedTab == 1) ...[
+                                _sectionHeader("Completed Pujas", completedBookings.length),
+                                const SizedBox(height: 10),
+                                ...completedBookings.map((b) => _bookingCard(b, upcoming: false)),
+                              ] else ...[
+                                _sectionHeader("Cancelled Pujas", cancelledBookings.length),
+                                const SizedBox(height: 10),
+                                if (cancelledBookings.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
+                                    child: Center(
+                                      child: Text(
+                                        "No cancelled pujas",
+                                        style: avenirNextRegular.copyWith(
+                                          color: ColorResources.textLight,
+                                          fontSize: Dimensions.fontSizeDefault,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ...cancelledBookings.map((b) => _bookingCard(b, upcoming: false)),
+                              ],
+
+                              const SizedBox(height: 8),
+                              if (activeList.isNotEmpty) const SizedBox(height: 4),
+                              _statsRow(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: Row(
-              children: List.generate(3, (index) => _tabButton(index)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

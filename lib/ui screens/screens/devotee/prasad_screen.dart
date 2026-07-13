@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
-import 'package:matabari/ui%20screens/screens/prasad_detail_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/prasad_detail_screen.dart';
 
 class PrasadScreen extends StatefulWidget {
   const PrasadScreen({super.key});

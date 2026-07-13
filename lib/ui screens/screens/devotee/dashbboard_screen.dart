@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:matabari/ui%20screens/screens/aarti_screen.dart';
-import 'package:matabari/ui%20screens/screens/home_screen.dart';
-import 'package:matabari/ui%20screens/screens/menu_screen.dart';
-import 'package:matabari/ui%20screens/screens/pooja_screen.dart';
-import 'package:matabari/ui%20screens/screens/prasad_screen.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:matabari/ui%20screens/screens/devotee/aarti_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/home_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/menu_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/pooja_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/prasad_screen.dart';
 import 'package:matabari/widgets/bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {

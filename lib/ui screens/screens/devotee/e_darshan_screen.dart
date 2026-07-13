@@ -62,88 +62,108 @@ class _EDarshanScreenState extends State<EDarshanScreen> {
         onTap: (index) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SizedBox.expand(
+          child: Stack(
             children: [
-              _header(),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _liveVideoCard(),
+              Container(
+                height: 190,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/Group 31.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.maybePop(context),
+                            child: _circleIconButton(Icons.arrow_back),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "e-Darshan",
+                                  style: cormorantInfantBold.copyWith(
+                                    color: Colors.white,
+                                    fontSize: Dimensions.spacingSize22,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Mata Tripura Sundari Temple",
+                                  style: avenirNextRegular.copyWith(
+                                    color: Colors.white70,
+                                    fontSize: Dimensions.fontSizeSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _notify("Notifications enabled for live darshan"),
+                            child: _circleIconButton(Icons.notifications_none),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () => _notify("Sharing live darshan"),
+                            child: _circleIconButton(Icons.share_outlined),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 22),
 
-              _sectionTitle("Temple Timings"),
-              const SizedBox(height: 10),
-              _timingsCard(),
-              const SizedBox(height: 22),
+              /// BODY
+              Positioned(
+                top: 160,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xffF8F5F0),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(0, 18, 0, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _liveVideoCard(),
+                        ),
+                        const SizedBox(height: 22),
 
-              _sectionTitle("Today Seva"),
-              const SizedBox(height: 10),
-              _sevaCard(),
-              const SizedBox(height: 22),
+                        _sectionTitle("Temple Timings"),
+                        const SizedBox(height: 10),
+                        _timingsCard(),
+                        const SizedBox(height: 22),
 
-              _sectionTitle("Upcoming Events"),
-              const SizedBox(height: 10),
-              _upcomingEventsRow(),
+                        _sectionTitle("Today Seva"),
+                        const SizedBox(height: 10),
+                        _sevaCard(),
+                        const SizedBox(height: 22),
+
+                        _sectionTitle("Upcoming Events"),
+                        const SizedBox(height: 10),
+                        _upcomingEventsRow(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// ---------------- HEADER ----------------
-  Widget _header() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-      decoration: const BoxDecoration(
-        gradient: _redGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.maybePop(context),
-            child: _circleIconButton(Icons.arrow_back),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  "e-Darshan",
-                  style: cormorantInfantBold.copyWith(
-                    color: Colors.white,
-                    fontSize: Dimensions.spacingSize22,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Mata Tripura Sundari Temple",
-                  style: avenirNextRegular.copyWith(
-                    color: Colors.white70,
-                    fontSize: Dimensions.fontSizeSmall,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () => _notify("Notifications enabled for live darshan"),
-            child: _circleIconButton(Icons.notifications_none),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => _notify("Sharing live darshan"),
-            child: _circleIconButton(Icons.share_outlined),
-          ),
-        ],
       ),
     );
   }
