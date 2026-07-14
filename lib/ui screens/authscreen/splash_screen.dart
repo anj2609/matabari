@@ -60,6 +60,7 @@ class _SplashScreenState extends State<SplashScreen>
             pageBuilder: (_, animation, __) => switch (role) {
               'seller' => const SellerDashboardScreen(),
               'pandit' => const PanditDashboardScreen(),
+              'devotee' => const DashboardScreen(),
               _ => const DashboardScreen(),
             },
             transitionsBuilder: (_, animation, __, child) {

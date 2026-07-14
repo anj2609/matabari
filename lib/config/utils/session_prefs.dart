@@ -6,6 +6,7 @@ class SessionPrefs {
   static const String _loggedInKey = 'is_logged_in';
   static const String _roleKey = 'user_role';
   static const String _nameKey = 'user_name';
+  static const String _tokenKey = 'auth_token';
 
   /// Returns true if a session was previously saved.
   static Future<bool> isLoggedIn() async {
@@ -13,7 +14,8 @@ class SessionPrefs {
     return prefs.getBool(_loggedInKey) ?? false;
   }
 
-  /// The role of the last logged-in user ("seller" or "buyer").
+  /// The role of the last logged-in user: "devotee", "seller" (Prasad
+  /// Seller) or "pandit" (Pandit Ji).
   static Future<String?> getRole() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_roleKey);
@@ -31,6 +33,18 @@ class SessionPrefs {
     await prefs.setString(_nameKey, name);
   }
 
+  /// The auth token returned by verify-otp, used to authenticate later API calls.
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  /// Saves the auth token returned by verify-otp.
+  static Future<void> setToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+
   /// Marks the session as logged in and remembers which dashboard to
   /// return to on the next app launch.
   static Future<void> setLoggedIn(String role) async {
@@ -45,6 +59,7 @@ class SessionPrefs {
     await prefs.remove(_loggedInKey);
     await prefs.remove(_roleKey);
     await prefs.remove(_nameKey);
+    await prefs.remove(_tokenKey);
   }
 
   /// Permanently wipes all locally stored data for this account. Since the

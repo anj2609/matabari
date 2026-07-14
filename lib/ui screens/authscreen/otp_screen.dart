@@ -1,7 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
+import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/authscreen/authregister_screen.dart';
+import 'package:matabari/ui%20screens/screens/devotee/dashbboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/pandit_ji/pandit_dashboard_screen.dart';
+import 'package:matabari/ui%20screens/screens/prasad_seller/seller_dashboard_screen.dart';
 import 'package:matabari/widgets/button_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -24,6 +31,10 @@ class _OtpScreenState extends State<OtpScreen> {
     (_) => FocusNode(),
   );
 
+  bool _isVerifying = false;
+  bool _isResending = false;
+  String? _errorMessage;
+
   @override
   void dispose() {
     for (final c in _controllers) {
@@ -33,6 +44,110 @@ class _OtpScreenState extends State<OtpScreen> {
       f.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _verify() async {
+    if (_isVerifying) return;
+
+    final otp = _controllers.map((c) => c.text).join();
+    if (otp.length != _otpLength) {
+      setState(() => _errorMessage = "Please enter the complete 6-digit OTP");
+      return;
+    }
+
+    setState(() {
+      _isVerifying = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await ApiClient.verifyOtp(widget.phoneNumber, otp);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = body['data'] as Map<String, dynamic>?;
+        final token = data?['token'] as String?;
+        final userType = data?['user_type'] as String?;
+
+        if (token != null) await SessionPrefs.setToken(token);
+        await SessionPrefs.setLoggedIn(userType ?? 'devotee');
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => switch (userType) {
+              'seller' => const SellerDashboardScreen(),
+              'pandit' => const PanditDashboardScreen(),
+              _ => const DashboardScreen(),
+            },
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
+      final data = body['data'] as Map<String, dynamic>?;
+      if (data != null && data['is_complete'] == 0) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => RegistrationScreen()),
+        );
+        return;
+      }
+
+      setState(() {
+        _errorMessage = body['message'] as String? ?? "OTP verification failed";
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = "Something went wrong. Please check your connection.";
+      });
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    if (_isResending) return;
+
+    setState(() {
+      _isResending = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await ApiClient.resendOtp(widget.phoneNumber);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        for (final c in _controllers) {
+          c.clear();
+        }
+        _focusNodes.first.requestFocus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(body['message'] as String? ?? "OTP resent successfully."),
+            backgroundColor: const Color(0xff9D1911),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        setState(() {
+          _errorMessage = body['message'] as String? ?? "Failed to resend OTP.";
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = "Something went wrong. Please check your connection.";
+      });
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
   }
 
   // Shows the entered number prefixed with +91, or a placeholder if none.
@@ -164,20 +279,25 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
 
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: avenirNextCyr.copyWith(
+                      color: Colors.redAccent,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 30),
 
                 // Verify Button
-               CustomButton(
-                  title: "Verify",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RegistrationScreen()),
-                    );
-                  },
+                CustomButton(
+                  title: _isVerifying ? "Verifying..." : "Verify",
+                  onTap: _verify,
                 ),
-               
-                
 
                 const SizedBox(height: 16),
 
@@ -193,7 +313,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: _isResending ? null : _resendOtp,
                       child: ShaderMask(
                         shaderCallback: (bounds) => const LinearGradient(
                           begin: Alignment.topLeft,
@@ -207,7 +327,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         ).createShader(bounds),
                         blendMode: BlendMode.srcIn,
                         child: Text(
-                          "Click to resend",
+                          _isResending ? "Resending..." : "Click to resend",
                           style: avenirNextCyr.copyWith(
                             color: Colors.white,
                             decoration: TextDecoration.underline,

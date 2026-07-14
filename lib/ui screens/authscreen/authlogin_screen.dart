@@ -1,9 +1,8 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
-import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
-import 'package:matabari/ui%20screens/screens/devotee/dashbboard_screen.dart';
 import 'package:matabari/widgets/button_screen.dart';
 import 'package:matabari/ui%20screens/authscreen/otp_screen.dart';
 import 'package:matabari/widgets/formfield.dart';
@@ -17,7 +16,45 @@ class AuthLoginScreen extends StatefulWidget {
 
 class _AuthLoginScreenState extends State<AuthLoginScreen> {
   bool isAccepted = false;
+  bool isSendingOtp = false;
   final TextEditingController mobileController = TextEditingController();
+
+  Future<void> _sendOtp() async {
+    if (isSendingOtp) return;
+    setState(() => isSendingOtp = true);
+
+    final phone = mobileController.text.trim();
+    try {
+      final response = await ApiClient.sendOtp(phone);
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => OtpScreen(phoneNumber: phone)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to send OTP. Please try again."),
+            backgroundColor: Color(0xFFB11D2E),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Something went wrong. Please check your connection."),
+          backgroundColor: Color(0xFFB11D2E),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => isSendingOtp = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +201,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
 
                 /// OTP Button
                 CustomButton(
-                  title: "Send OTP",
+                  title: isSendingOtp ? "Sending..." : "Send OTP",
                   onTap: () {
                     if (!isAccepted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,55 +215,8 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                       );
                       return;
                     }
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => OtpScreen(
-                          phoneNumber: mobileController.text.trim(),
-                        ),
-                      ),
-                    );
+                    _sendOtp();
                   },
-                ),
-
-                const SizedBox(height: 10),
-
-                // /// Login Link
-                InkWell(
-                  onTap: () async {
-                    await SessionPrefs.setLoggedIn('buyer');
-                    if (!context.mounted) return;
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DashboardScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(color: Colors.black54, fontSize: 16),
-                      children: [
-                        TextSpan(
-                          text: "Already have an account. ",
-                          style: avenirNextCyr.copyWith(
-                            color: ColorResources.textLight,
-                            fontSize: Dimensions.spacingSize12,
-                          ),
-                        ),
-                        TextSpan(
-                          text: "Log in",
-                          style: avenirNextCyr.copyWith(
-                            color: ColorResources.kArrow,
-                            fontSize: Dimensions.spacingSize12,
-                            decoration: TextDecoration.underline,
-                            decorationColor: ColorResources.kArrow,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),

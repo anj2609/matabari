@@ -214,7 +214,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                           fullName,
                                         );
                                       }
-                                      await SessionPrefs.setLoggedIn('buyer');
+                                      await SessionPrefs.setLoggedIn('devotee');
                                       if (!context.mounted) return;
                                       Navigator.pushAndRemoveUntil(
                                         context,
