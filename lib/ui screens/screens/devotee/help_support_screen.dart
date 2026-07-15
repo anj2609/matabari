@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/widgets/bottom_nav_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -20,6 +24,28 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   );
 
   final Set<int> expandedFaqs = {};
+
+  Map<String, dynamic>? _helpSupport;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHelpSupport();
+  }
+
+  Future<void> _fetchHelpSupport() async {
+    try {
+      final response = await ApiClient.getHelpSupport();
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        setState(() => _helpSupport = body['data'] as Map<String, dynamic>?);
+      }
+    } catch (_) {
+      // Non-critical - the screen falls back to its static contact details.
+    }
+  }
 
   static const List<Map<String, dynamic>> _quickHelp = [
     {
@@ -69,6 +95,25 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _launchUri(Uri uri) async {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) _notify("Couldn't open this link");
+  }
+
+  Future<void> _callPhone(String phone) => _launchUri(Uri(scheme: 'tel', path: phone));
+
+  Future<void> _sendEmail(String email) => _launchUri(Uri(scheme: 'mailto', path: email));
+
+  Future<void> _openWebsite(String url) {
+    final normalized = url.startsWith('http') ? url : 'https://$url';
+    return _launchUri(Uri.parse(normalized));
+  }
+
+  Future<void> _openWhatsapp(String phone) {
+    final digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    return _launchUri(Uri.parse('https://wa.me/$digits'));
+  }
+
   Widget _gradientText(String text, TextStyle style) {
     return ShaderMask(
       shaderCallback: (bounds) => _redGradient.createShader(bounds),
@@ -103,6 +148,14 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               ...List.generate(_faqs.length, _faqTile),
               const SizedBox(height: 22),
 
+              if (_helpSupport?['about'] != null &&
+                  (_helpSupport!['about'] as String).isNotEmpty) ...[
+                _sectionTitle("About Us"),
+                const SizedBox(height: 10),
+                _aboutCard(),
+                const SizedBox(height: 22),
+              ],
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _stillNeedHelpCard(),
@@ -110,6 +163,13 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               const SizedBox(height: 18),
 
               _contactRow(),
+
+              if (_socialLinks().isNotEmpty) ...[
+                const SizedBox(height: 18),
+                _sectionTitle("Follow Us"),
+                const SizedBox(height: 10),
+                _socialRow(),
+              ],
             ],
           ),
         ),
@@ -387,12 +447,97 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     );
   }
 
+  /// ---------------- ABOUT ----------------
+  Widget _aboutCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBF2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xffF3D8B3)),
+        ),
+        child: Text(
+          _helpSupport!['about'] as String,
+          style: avenirNextRegular.copyWith(
+            color: ColorResources.textLight,
+            fontSize: Dimensions.fontSizeDefault,
+            height: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ---------------- SOCIAL LINKS ----------------
+  List<(String label, String value, Widget icon)> _socialLinks() {
+    final data = _helpSupport;
+    if (data == null) return [];
+
+    String? link(String key) {
+      final value = data[key] as String?;
+      return (value == null || value.isEmpty) ? null : value;
+    }
+
+    return [
+      if (link('facebook') case final url?)
+        ('facebook', url, const Icon(Icons.facebook, color: Colors.white, size: 18)),
+      if (link('instagram') case final url?)
+        ('instagram', url, const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 18)),
+      if (link('youtube') case final url?)
+        (
+          'youtube',
+          url,
+          Image.asset(
+            'assets/images/Youtube.png',
+            height: 18,
+            width: 18,
+            color: Colors.white,
+          ),
+        ),
+      if (link('twitter') case final url?)
+        ('twitter', url, const Icon(Icons.alternate_email, color: Colors.white, size: 18)),
+      if (link('linkedin') case final url?)
+        ('linkedin', url, const Icon(Icons.business_center_outlined, color: Colors.white, size: 18)),
+      if (link('whatsapp') case final url?)
+        ('whatsapp', url, const Icon(Icons.chat_bubble, color: Colors.white, size: 18)),
+    ];
+  }
+
+  Widget _socialRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: _socialLinks().map((entry) {
+          final (label, value, icon) = entry;
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () => label == 'whatsapp' ? _openWhatsapp(value) : _launchUri(Uri.parse(value)),
+              child: Container(
+                height: 38,
+                width: 38,
+                decoration: const BoxDecoration(
+                  gradient: _redGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(child: icon),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   /// ---------------- CONTACT ROW ----------------
   Widget _contactRow() {
     final contacts = [
-      (Icons.call_outlined, "Phone", "+91 987-654-3210"),
-      (Icons.language, "Website", "www.matabari.org"),
-      (Icons.mail_outline, "Email", "info@matabari.org"),
+      (Icons.call_outlined, "Phone", _helpSupport?['phone'] as String? ?? "+91 987-654-3210"),
+      (Icons.language, "Website", _helpSupport?['website_url'] as String? ?? "www.matabari.org"),
+      (Icons.mail_outline, "Email", _helpSupport?['email'] as String? ?? "info@matabari.org"),
     ];
 
     return Padding(
@@ -401,7 +546,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         children: contacts.map((c) {
           return Expanded(
             child: GestureDetector(
-              onTap: () => _notify("Opening ${c.$2.toLowerCase()}: ${c.$3}"),
+              onTap: () => switch (c.$2) {
+                "Phone" => _callPhone(c.$3),
+                "Website" => _openWebsite(c.$3),
+                _ => _sendEmail(c.$3),
+              },
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),

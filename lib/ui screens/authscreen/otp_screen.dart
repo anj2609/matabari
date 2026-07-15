@@ -92,7 +92,9 @@ class _OtpScreenState extends State<OtpScreen> {
       if (data != null && data['is_complete'] == 0) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => RegistrationScreen()),
+          MaterialPageRoute(
+            builder: (context) => RegistrationScreen(phoneNumber: widget.phoneNumber),
+          ),
         );
         return;
       }

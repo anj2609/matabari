@@ -1,6 +1,10 @@
-﻿import 'dart:ui' show ImageFilter;
+import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
@@ -11,7 +15,9 @@ import 'package:matabari/ui%20screens/screens/pandit_ji/pandit_dashboard_screen.
 import 'package:matabari/widgets/formfield.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+  final String phoneNumber;
+
+  const RegistrationScreen({super.key, this.phoneNumber = ''});
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
@@ -27,12 +33,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   final ownerFirstNameController = TextEditingController();
   final ownerLastNameController = TextEditingController();
+  final sellerMobileController = TextEditingController();
+  final sellerEmailController = TextEditingController();
+  final sellerShopNameController = TextEditingController();
 
   final devoteeFirstNameController = TextEditingController();
   final devoteeLastNameController = TextEditingController();
+  final devoteeMobileController = TextEditingController();
+  final devoteeEmailController = TextEditingController();
 
   final panditFirstNameController = TextEditingController();
   final panditLastNameController = TextEditingController();
+  final panditMobileController = TextEditingController();
+  final panditEmailController = TextEditingController();
+  final panditSkillController = TextEditingController();
+
+  File? profileImage;
+  bool isSubmitting = false;
 
   // Shared red gradient (same as the onboarding screens).
   static const LinearGradient _redGradient = LinearGradient(
@@ -43,14 +60,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    // The phone number is already verified via OTP, so every role's form
+    // shows it pre-filled and locked rather than letting it be re-typed.
+    devoteeMobileController.text = widget.phoneNumber;
+    panditMobileController.text = widget.phoneNumber;
+    sellerMobileController.text = widget.phoneNumber;
+  }
+
+  @override
   void dispose() {
     dobController.dispose();
     ownerFirstNameController.dispose();
     ownerLastNameController.dispose();
+    sellerMobileController.dispose();
+    sellerEmailController.dispose();
+    sellerShopNameController.dispose();
     devoteeFirstNameController.dispose();
     devoteeLastNameController.dispose();
+    devoteeMobileController.dispose();
+    devoteeEmailController.dispose();
     panditFirstNameController.dispose();
     panditLastNameController.dispose();
+    panditMobileController.dispose();
+    panditEmailController.dispose();
+    panditSkillController.dispose();
     super.dispose();
   }
 
@@ -70,6 +105,59 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             "${picked.month.toString().padLeft(2, '0')}/"
             "${picked.year}";
       });
+    }
+  }
+
+  Future<void> _pickProfileImage() async {
+    final XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => profileImage = File(image.path));
+    }
+  }
+
+  /// Calls api/basic-info with whichever fields the current role's form
+  /// collected, plus the shared profile photo. Returns true on success;
+  /// shows an error snackbar and returns false otherwise.
+  Future<bool> _submitBasicInfo({
+    required String firstName,
+    required String lastName,
+    required String mobile,
+    required String email,
+    String? gender,
+    String? dob,
+    String? skill,
+    String? shopName,
+  }) async {
+    setState(() => isSubmitting = true);
+    try {
+      final response = await ApiClient.updateBasicInfo(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        mobile: mobile,
+        gender: gender,
+        dob: dob,
+        skill: skill,
+        shopName: shopName,
+        profileImage: profileImage,
+      );
+      if (!mounted) return false;
+
+      if (response.statusCode == 200) return true;
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(body['message'] as String? ?? "Failed to save profile.")),
+      );
+      return false;
+    } catch (_) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Something went wrong. Please check your connection.")),
+      );
+      return false;
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 
@@ -111,6 +199,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
 
               SizedBox(height: Dimensions.spacingSize25),
+
+              profileImagePicker(),
 
               /// Role Selector
               ClipRRect(
@@ -185,11 +275,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              onPressed: selectedRole == "Prasad Seller"
+                              onPressed: isSubmitting
+                                  ? null
+                                  : selectedRole == "Prasad Seller"
                                   ? () async {
                                       final fullName =
                                           "${ownerFirstNameController.text.trim()} ${ownerLastNameController.text.trim()}"
                                               .trim();
+                                      final success = await _submitBasicInfo(
+                                        firstName: ownerFirstNameController.text.trim(),
+                                        lastName: ownerLastNameController.text.trim(),
+                                        mobile: sellerMobileController.text.trim(),
+                                        email: sellerEmailController.text.trim(),
+                                        shopName: sellerShopNameController.text.trim(),
+                                      );
+                                      if (!success) return;
                                       if (fullName.isNotEmpty) {
                                         await SessionPrefs.setUserName(
                                           fullName,
@@ -209,6 +309,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       final fullName =
                                           "${devoteeFirstNameController.text.trim()} ${devoteeLastNameController.text.trim()}"
                                               .trim();
+                                      final success = await _submitBasicInfo(
+                                        firstName: devoteeFirstNameController.text.trim(),
+                                        lastName: devoteeLastNameController.text.trim(),
+                                        mobile: devoteeMobileController.text.trim(),
+                                        email: devoteeEmailController.text.trim(),
+                                      );
+                                      if (!success) return;
                                       if (fullName.isNotEmpty) {
                                         await SessionPrefs.setUserName(
                                           fullName,
@@ -230,6 +337,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       final fullName =
                                           "${panditFirstNameController.text.trim()} ${panditLastNameController.text.trim()}"
                                               .trim();
+                                      final success = await _submitBasicInfo(
+                                        firstName: panditFirstNameController.text.trim(),
+                                        lastName: panditLastNameController.text.trim(),
+                                        mobile: panditMobileController.text.trim(),
+                                        email: panditEmailController.text.trim(),
+                                        gender: selectedGender,
+                                        dob: dobController.text.trim(),
+                                        skill: panditSkillController.text.trim(),
+                                      );
+                                      if (!success) return;
                                       if (fullName.isNotEmpty) {
                                         await SessionPrefs.setUserName(
                                           fullName,
@@ -248,7 +365,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                     }
                                   : null,
                               child: Text(
-                                selectedRole == "Prasad Seller"
+                                isSubmitting
+                                    ? 'Please wait...'
+                                    : selectedRole == "Prasad Seller"
                                     ? 'Next'
                                     : 'Sign Up',
                                 style: avenirNextCyr.copyWith(
@@ -292,6 +411,42 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
+  Widget profileImagePicker() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Center(
+        child: GestureDetector(
+          onTap: _pickProfileImage,
+          child: Stack(
+            children: [
+              CircleAvatar(
+                radius: 44,
+                backgroundColor: ColorResources.cardBg,
+                backgroundImage: profileImage != null ? FileImage(profileImage!) : null,
+                child: profileImage == null
+                    ? const Icon(Icons.person, size: 44, color: ColorResources.textLight)
+                    : null,
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    gradient: _redGradient,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget roleButton(String title) {
     bool selected = selectedRole == title;
 
@@ -326,6 +481,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     String hint, {
     TextInputType keyboardType = TextInputType.text,
     TextEditingController? controller,
+    bool readOnly = false,
+    Widget? suffixIcon,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
@@ -334,6 +491,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         hint: hint,
         keyboardType: keyboardType,
         controller: controller,
+        readOnly: readOnly,
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+
+  Widget phoneField(TextEditingController controller) {
+    return customField(
+      "Mobile Number",
+      "Verified mobile number",
+      controller: controller,
+      keyboardType: TextInputType.phone,
+      readOnly: true,
+      suffixIcon: const Icon(
+        Icons.lock_outline,
+        size: 18,
+        color: ColorResources.textLight,
       ),
     );
   }
@@ -400,14 +574,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
           ],
         ),
-        customField(
-          "Mobile Number",
-          "+91 987-654-3210",
-          keyboardType: TextInputType.phone,
-        ),
+        phoneField(devoteeMobileController),
         customField(
           "Email Address",
           "Enter your email",
+          controller: devoteeEmailController,
           keyboardType: TextInputType.emailAddress,
         ),
         // button("Sign Up"),
@@ -444,17 +615,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Expanded(child: genderField()),
           ],
         ),
-        customField(
-          "Mobile Number",
-          "+91 742-806-9557",
-          keyboardType: TextInputType.phone,
-        ),
+        phoneField(panditMobileController),
         customField(
           "Email Address",
           "Enter your email",
+          controller: panditEmailController,
           keyboardType: TextInputType.emailAddress,
         ),
-        customField("Skills", "Enter your skills"),
+        customField(
+          "Skills",
+          "Enter your skills",
+          controller: panditSkillController,
+        ),
         // button("Sign Up"),
       ],
     );
@@ -463,7 +635,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget sellerForm() {
     return Column(
       children: [
-        customField("Business / Shop Name", "Enter your business name"),
+        customField(
+          "Business / Shop Name",
+          "Enter your business name",
+          controller: sellerShopNameController,
+        ),
         Row(
           children: [
             Expanded(
@@ -483,14 +659,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
           ],
         ),
-        customField(
-          "Mobile Number",
-          "+91 742-806-9557",
-          keyboardType: TextInputType.phone,
-        ),
+        phoneField(sellerMobileController),
         customField(
           "Email Address",
           "Enter your email",
+          controller: sellerEmailController,
           keyboardType: TextInputType.emailAddress,
         ),
         //button("Next"),

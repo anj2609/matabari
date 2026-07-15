@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
@@ -29,123 +32,153 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
   String selectedStatus = "All Status";
   String selectedSort = "Date (Newest)";
 
-  static const List<Map<String, String>> _bookings = [
-    {
-      "name": "Rahul Sharma",
-      "puja": "Mata Tripura Sundari Puja",
-      "status": "Confirmed",
-      "category": "upcoming",
-      "bookingId": "#PB74391234",
-      "date": "25 Jun 2026",
-      "time": "09:30 AM",
-      "family": "Family (2 Members)",
-      "language": "Hindi",
-      "image": "assets/images/Rectangle 693.png",
-      "phone": "+91 98765 43210",
-      "location": "Udaipur, Tripura",
-      "amount": "2,500",
-      "paidAmount": "2,500",
-      "paymentStatus": "Paid",
-      "paymentMethod": "Online Payment",
-    },
-    {
-      "name": "Priya Iyer",
-      "puja": "Abhishekam Puja",
-      "status": "Confirmed",
-      "category": "upcoming",
-      "bookingId": "#PB74391235",
-      "date": "26 Jun 2026",
-      "time": "10:00 AM",
-      "family": "Family (2 Members)",
-      "language": "Sanskrit",
-      "image": "assets/images/Rectangle 703.png",
-      "phone": "+91 98765 43211",
-      "location": "Agartala, Tripura",
-      "amount": "1,800",
-      "paidAmount": "1,800",
-      "paymentStatus": "Paid",
-      "paymentMethod": "Online Payment",
-    },
-    {
-      "name": "Amit Verma",
-      "puja": "Mangala Aarti Puja",
-      "status": "Confirmed",
-      "category": "today",
-      "bookingId": "#PB74391236",
-      "date": "13 Jul 2026",
-      "time": "07:00 AM",
-      "family": "Family (3 Members)",
-      "language": "Hindi",
-      "image": "assets/images/Rectangle 720.png",
-      "phone": "+91 98765 43212",
-      "location": "Udaipur, Tripura",
-      "amount": "1,500",
-      "paidAmount": "1,500",
-      "paymentStatus": "Paid",
-      "paymentMethod": "Online Payment",
-    },
-    {
-      "name": "Sneha Patel",
-      "puja": "Durga Saptashati Path",
-      "status": "Completed",
-      "category": "completed",
-      "bookingId": "#PB74391237",
-      "date": "15 May 2026",
-      "time": "08:00 AM",
-      "family": "Family (2 Members)",
-      "language": "Bengali",
-      "image": "assets/images/Rectangle 725.png",
-      "phone": "+91 98765 43213",
-      "location": "Udaipur, Tripura",
-      "amount": "3,000",
-      "paidAmount": "3,000",
-      "paymentStatus": "Paid",
-      "paymentMethod": "Online Payment",
-    },
-    {
-      "name": "Vikram Singh",
-      "puja": "Laxmi Puja",
-      "status": "Confirmed",
-      "category": "upcoming",
-      "bookingId": "#PB74391238",
-      "date": "28 Jun 2026",
-      "time": "11:00 AM",
-      "family": "Family (4 Members)",
-      "language": "Punjabi",
-      "image": "assets/images/Rectangle 708.png",
-      "phone": "+91 98765 43214",
-      "location": "Udaipur, Tripura",
-      "amount": "2,200",
-      "paidAmount": "2,200",
-      "paymentStatus": "Paid",
-      "paymentMethod": "Online Payment",
-    },
-    {
-      "name": "Karan Mehta",
-      "puja": "Ganesh Puja",
-      "status": "Cancelled",
-      "category": "cancelled",
-      "bookingId": "#PB74391239",
-      "date": "20 Jun 2026",
-      "time": "06:00 PM",
-      "family": "Family (3 Members)",
-      "language": "Hindi",
-      "image": "assets/images/Rectangle 725.png",
-      "phone": "+91 98765 43215",
-      "location": "Udaipur, Tripura",
-      "amount": "1,200",
-      "paidAmount": "0",
-      "paymentStatus": "Refunded",
-      "paymentMethod": "Online Payment",
-    },
-  ];
+  List<Map<String, String>> _bookings = [];
+  bool _loading = true;
+  String? _error;
+
+  final ScrollController _scrollController = ScrollController();
+  int _currentPage = 1;
+  int _lastPage = 1;
+  bool _loadingMore = false;
 
   static const _tabs = ["Upcoming", "Today", "Completed", "Cancelled"];
   static const _tabCategories = ["upcoming", "today", "completed", "cancelled"];
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookings();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_loading || _loadingMore) return;
+    if (_currentPage >= _lastPage) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMoreBookings();
+    }
+  }
+
+  /// Fetches page 1 for the currently selected tab, replacing whatever was
+  /// previously loaded.
+  Future<void> _fetchBookings() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _bookings = [];
+      _currentPage = 1;
+      _lastPage = 1;
+    });
+
+    try {
+      final response = await ApiClient.getPanditBookings(_tabCategories[selectedTab], page: 1);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final page = body['data'] as Map<String, dynamic>?;
+        final list = page?['data'] as List<dynamic>? ?? [];
+        setState(() {
+          _bookings = list.map((e) => _normalize(e as Map<String, dynamic>)).toList();
+          _currentPage = page?['current_page'] as int? ?? 1;
+          _lastPage = page?['last_page'] as int? ?? 1;
+        });
+      } else {
+        setState(() => _error = body['message'] as String? ?? "Failed to load bookings.");
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = "Something went wrong. Please check your connection.");
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Fetches the next page and appends it - triggered by scrolling near
+  /// the bottom of the list (infinite scroll).
+  Future<void> _loadMoreBookings() async {
+    if (_loadingMore || _currentPage >= _lastPage) return;
+
+    setState(() => _loadingMore = true);
+    try {
+      final nextPage = _currentPage + 1;
+      final response = await ApiClient.getPanditBookings(
+        _tabCategories[selectedTab],
+        page: nextPage,
+      );
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final page = body['data'] as Map<String, dynamic>?;
+        final list = page?['data'] as List<dynamic>? ?? [];
+        setState(() {
+          _bookings.addAll(list.map((e) => _normalize(e as Map<String, dynamic>)));
+          _currentPage = page?['current_page'] as int? ?? nextPage;
+          _lastPage = page?['last_page'] as int? ?? _lastPage;
+        });
+      }
+    } catch (_) {
+      // Silently ignore - scrolling again (or switching tabs) will retry.
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
+  }
+
+  /// Maps a raw api/pandit/bookings item onto the field names this screen
+  /// (and the booking detail screen) already use. Fields the API doesn't
+  /// provide (time, language, location, payment/sankalp/inclusions info)
+  /// are simply left out - callers already fall back gracefully for those.
+  Map<String, String> _normalize(Map<String, dynamic> raw) {
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    var dateLabel = '';
+    final rawDate = raw['booking_date'] as String?;
+    if (rawDate != null) {
+      try {
+        final parsed = DateTime.parse(rawDate);
+        dateLabel =
+            "${parsed.day.toString().padLeft(2, '0')} ${months[parsed.month - 1]} ${parsed.year}";
+      } catch (_) {
+        dateLabel = rawDate;
+      }
+    }
+
+    final isSelf = raw['is_self'] == true;
+    final memberCount = raw['member_count'] as int? ?? 0;
+    final familyLabel = isSelf
+        ? "Self"
+        : "Family ($memberCount Member${memberCount == 1 ? '' : 's'})";
+
+    final status = (raw['status'] as String? ?? '').trim();
+    final statusLabel = status.isEmpty ? '' : status[0].toUpperCase() + status.substring(1);
+
+    return {
+      'id': raw['booking_id']?.toString() ?? '',
+      'name': raw['devotee_name'] as String? ?? '',
+      'puja': raw['puja_name'] as String? ?? '',
+      'status': statusLabel,
+      'bookingId': raw['booking_no'] as String? ?? '',
+      'date': dateLabel,
+      'family': familyLabel,
+      'image': raw['thumbnail'] as String? ?? '',
+      'phone': raw['phone'] as String? ?? '',
+    };
+  }
+
   List<Map<String, String>> get _filtered {
     var list = _bookings
-        .where((b) => b['category'] == _tabCategories[selectedTab])
         .where((b) => selectedDate == "All Dates" || b['date'] == selectedDate)
         .where((b) => selectedPujaType == "All Types" || b['puja'] == selectedPujaType)
         .where((b) => selectedStatus == "All Status" || b['status'] == selectedStatus)
@@ -258,7 +291,25 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
                     _filterRow(),
                     const SizedBox(height: 10),
                     Expanded(
-                      child: results.isEmpty
+                      child: _loading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xff9D1911),
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : _error != null
+                          ? Center(
+                              child: Text(
+                                _error!,
+                                textAlign: TextAlign.center,
+                                style: avenirNextRegular.copyWith(
+                                  color: ColorResources.textLight,
+                                  fontSize: Dimensions.fontSizeDefault,
+                                ),
+                              ),
+                            )
+                          : results.isEmpty
                           ? Center(
                               child: Text(
                                 "No bookings match your filters",
@@ -269,9 +320,23 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
                               ),
                             )
                           : ListView.builder(
+                              controller: _scrollController,
                               padding: const EdgeInsets.only(bottom: 16),
-                              itemCount: results.length,
-                              itemBuilder: (context, index) => _bookingCard(results[index]),
+                              itemCount: results.length + (_loadingMore ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index >= results.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: Color(0xff9D1911),
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return _bookingCard(results[index]);
+                              },
                             ),
                     ),
                   ],
@@ -301,7 +366,12 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
             final active = selectedTab == i;
             return Expanded(
               child: GestureDetector(
-                onTap: () => setState(() => selectedTab = i),
+                onTap: () {
+                  if (selectedTab == i) return;
+                  setState(() => selectedTab = i);
+                  if (_scrollController.hasClients) _scrollController.jumpTo(0);
+                  _fetchBookings();
+                },
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -458,10 +528,14 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
   /// ---------------- BOOKING CARD ----------------
   Widget _bookingCard(Map<String, String> b) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => PujaBookingDetailScreen(booking: b)),
-      ),
+      onTap: () {
+        final id = int.tryParse(b['id'] ?? '');
+        if (id == null) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => PujaBookingDetailScreen(bookingId: id)),
+        );
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsets.all(10),
@@ -475,7 +549,25 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(b['image']!, height: 64, width: 64, fit: BoxFit.cover),
+              child: (b['image'] ?? '').startsWith('http')
+                  ? Image.network(
+                      b['image']!,
+                      height: 64,
+                      width: 64,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 64,
+                        width: 64,
+                        color: const Color(0xFFFFF4E6),
+                        child: const Icon(Icons.image_not_supported_outlined, color: ColorResources.kOrange),
+                      ),
+                    )
+                  : Image.asset(
+                      (b['image'] ?? '').isEmpty ? 'assets/images/Rectangle 693.png' : b['image']!,
+                      height: 64,
+                      width: 64,
+                      fit: BoxFit.cover,
+                    ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -539,16 +631,18 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
                       const Icon(Icons.calendar_month_outlined, size: 11, color: Color(0xffF59E0B)),
                       const SizedBox(width: 4),
                       Text(
-                        b['date']!,
+                        b['date'] ?? '',
                         style: avenirNextRegular.copyWith(color: ColorResources.textLight, fontSize: 10),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.access_time, size: 11, color: Color(0xffF59E0B)),
-                      const SizedBox(width: 4),
-                      Text(
-                        b['time']!,
-                        style: avenirNextRegular.copyWith(color: ColorResources.textLight, fontSize: 10),
-                      ),
+                      if ((b['time'] ?? '').isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.access_time, size: 11, color: Color(0xffF59E0B)),
+                        const SizedBox(width: 4),
+                        Text(
+                          b['time']!,
+                          style: avenirNextRegular.copyWith(color: ColorResources.textLight, fontSize: 10),
+                        ),
+                      ],
                     ],
                   ),
                   Row(
@@ -556,16 +650,18 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
                       const Icon(Icons.people_alt_outlined, size: 11, color: Color(0xffF59E0B)),
                       const SizedBox(width: 4),
                       Text(
-                        b['family']!,
+                        b['family'] ?? '',
                         style: avenirNextRegular.copyWith(color: ColorResources.textLight, fontSize: 10),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.language, size: 11, color: Color(0xffF59E0B)),
-                      const SizedBox(width: 4),
-                      Text(
-                        b['language']!,
-                        style: avenirNextRegular.copyWith(color: ColorResources.textLight, fontSize: 10),
-                      ),
+                      if ((b['language'] ?? '').isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.language, size: 11, color: Color(0xffF59E0B)),
+                        const SizedBox(width: 4),
+                        Text(
+                          b['language']!,
+                          style: avenirNextRegular.copyWith(color: ColorResources.textLight, fontSize: 10),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 8),

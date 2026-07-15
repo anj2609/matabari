@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
@@ -27,18 +29,17 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
   final address1Controller = TextEditingController();
   final address2Controller = TextEditingController();
   final pinCodeController = TextEditingController();
-  final aadhaarController = TextEditingController();
 
   File? shopLicense;
   File? fssaiCertificate;
   File? gstCertificate;
+  File? aadhaarFile;
+  File? panFile;
 
-  final List<String> businessTypes = [
-    "Prasad Seller",
-    "Temple Vendor",
-    "Flower Seller",
-    "Sweet Shop",
-  ];
+  bool isSubmitting = false;
+
+  List<Map<String, dynamic>> businessTypes = [];
+  bool loadingBusinessTypes = true;
 
   final List<String> states = [
     "Uttar Pradesh",
@@ -56,6 +57,31 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
     colors: [Color(0xffC42118), Color(0xff9D1911), Color(0xff650E07)],
     stops: [0.0, 0.45, 1.0],
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBusinessTypes();
+  }
+
+  Future<void> _fetchBusinessTypes() async {
+    try {
+      final response = await ApiClient.getBusinessListing();
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = body['data'] as List<dynamic>? ?? [];
+        setState(() => businessTypes = data.cast<Map<String, dynamic>>());
+        return;
+      }
+    } catch (_) {
+      // Fetch failed - fall through to the empty-state placeholder below
+      // rather than blocking the form.
+    } finally {
+      if (mounted) setState(() => loadingBusinessTypes = false);
+    }
+  }
 
   Future<void> pickImage(String type) async {
     final XFile? image = await ImagePicker().pickImage(
@@ -76,6 +102,14 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
           case "gst":
             gstCertificate = File(image.path);
             break;
+
+          case "adhar":
+            aadhaarFile = File(image.path);
+            break;
+
+          case "pan":
+            panFile = File(image.path);
+            break;
         }
       });
     }
@@ -85,7 +119,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  void submitForm() {
+  Future<void> submitForm() async {
     if (shopLicense == null) {
       showMessage("Please upload Shop License");
       return;
@@ -96,16 +130,116 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Business Details Submitted")),
+    if (aadhaarFile == null) {
+      showMessage("Please upload Aadhaar Card");
+      return;
+    }
+
+    if (panFile == null) {
+      showMessage("Please upload PAN Card");
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) return;
+
+    final selectedBusiness = businessTypes.firstWhere(
+      (b) => b['name'] == businessType,
+      orElse: () => const {},
+    );
+    final businessId = selectedBusiness['id'] as int?;
+
+    setState(() => isSubmitting = true);
+    try {
+      final response = await ApiClient.submitSellerBusinessDetails(
+        businessId: businessId,
+        gstNo: gstController.text.trim(),
+        panNo: panController.text.trim(),
+        registrationNo: registrationController.text.trim(),
+        shopAddressLine1: address1Controller.text.trim(),
+        shopAddressLine2: address2Controller.text.trim(),
+        state: selectedState ?? '',
+        pincode: pinCodeController.text.trim(),
+        shopLicenseFile: shopLicense!,
+        fssaiCertificateFile: fssaiCertificate!,
+        gstFile: gstCertificate,
+        adharFile: aadhaarFile!,
+        panFile: panFile!,
       );
+      if (!mounted) return;
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        showMessage(body['message'] as String? ?? "Failed to save business details.");
+        return;
+      }
+
+      showMessage(body['message'] as String? ?? "Business Details Submitted");
 
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => BankPaymentDetailsPage()),
       );
+    } catch (_) {
+      if (!mounted) return;
+      showMessage("Something went wrong. Please check your connection.");
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
     }
+  }
+
+  Widget businessTypeField() {
+    if (loadingBusinessTypes) {
+      return businessTypePlaceholder("Loading business types...");
+    }
+
+    if (businessTypes.isEmpty) {
+      return businessTypePlaceholder("No business types available yet");
+    }
+
+    return LabeledDropdownField<String>(
+      label: "Business Type",
+      hint: "e.g. Prasad Seller",
+      value: businessType,
+      items: businessTypes.map((item) {
+        final name = item['name'] as String;
+        return DropdownMenuItem(value: name, child: Text(name));
+      }).toList(),
+      validator: (value) {
+        if (value == null) {
+          return "Select business type";
+        }
+        return null;
+      },
+      onChanged: (value) {
+        setState(() {
+          businessType = value;
+        });
+      },
+    );
+  }
+
+  Widget businessTypePlaceholder(String message) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Business Type", style: LabeledTextField.labelStyle),
+        const SizedBox(height: 8),
+        Container(
+          height: 54,
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: ColorResources.cardBg,
+            border: Border.all(color: ColorResources.border),
+            borderRadius: BorderRadius.circular(Dimensions.radiusSizeDefault),
+          ),
+          child: Text(
+            message,
+            style: TextStyle(color: ColorResources.textLight, fontSize: 12),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget uploadField({
@@ -236,25 +370,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                 const SizedBox(height: 35),
 
                 /// Business Type
-                LabeledDropdownField<String>(
-                  label: "Business Type",
-                  hint: "e.g. Prasad Seller",
-                  value: businessType,
-                  items: businessTypes.map((item) {
-                    return DropdownMenuItem(value: item, child: Text(item));
-                  }).toList(),
-                  validator: (value) {
-                    if (value == null) {
-                      return "Select business type";
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    setState(() {
-                      businessType = value;
-                    });
-                  },
-                ),
+                businessTypeField(),
 
                 const SizedBox(height: 18),
 
@@ -387,27 +503,6 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
 
                 const SizedBox(height: 18),
 
-                /// Aadhaar
-                LabeledTextField(
-                  label: "Aadhaar Card Number",
-                  hint: "Enter Aadhaar number",
-                  controller: aadhaarController,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Enter Aadhaar Number";
-                    }
-
-                    if (!RegExp(r'^\d{12}$').hasMatch(value)) {
-                      return "Aadhaar must be 12 digits";
-                    }
-
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 18),
-
                 /// Document Uploads
                 uploadField(
                   title: "Shop License",
@@ -424,6 +519,24 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                   onTap: () => pickImage("fssai"),
                 ),
                 uploadedPreview(fssaiCertificate),
+
+                const SizedBox(height: 18),
+
+                uploadField(
+                  title: "Aadhaar Card",
+                  file: aadhaarFile,
+                  onTap: () => pickImage("adhar"),
+                ),
+                uploadedPreview(aadhaarFile),
+
+                const SizedBox(height: 18),
+
+                uploadField(
+                  title: "PAN Card",
+                  file: panFile,
+                  onTap: () => pickImage("pan"),
+                ),
+                uploadedPreview(panFile),
 
                 const SizedBox(height: 18),
 
@@ -445,7 +558,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: ElevatedButton(
-                      onPressed: submitForm,
+                      onPressed: isSubmitting ? null : submitForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -453,9 +566,9 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
-                        "Next",
-                        style: TextStyle(
+                      child: Text(
+                        isSubmitting ? "Please wait..." : "Next",
+                        style: const TextStyle(
                           fontSize: 16,
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

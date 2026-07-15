@@ -1,4 +1,7 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/ui%20screens/screens/prasad_seller/seller_dashboard_screen.dart';
 import 'package:matabari/widgets/formfield.dart';
@@ -21,10 +24,36 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
   final ifscController = TextEditingController();
   final upiController = TextEditingController();
 
-  void submitForm() async {
-    if (_formKey.currentState!.validate()) {
+  bool isSubmitting = false;
+
+  Future<void> submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final holderName =
+        "${accountHolderFirstController.text.trim()} ${accountHolderLastController.text.trim()}"
+            .trim();
+
+    setState(() => isSubmitting = true);
+    try {
+      final response = await ApiClient.submitBankInfo(
+        holderName: holderName,
+        bankName: bankNameController.text.trim(),
+        ifscCode: ifscController.text.trim(),
+        acNo: accountNumberController.text.trim(),
+        upiId: upiController.text.trim(),
+      );
+      if (!mounted) return;
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(body['message'] as String? ?? "Failed to save bank details.")),
+        );
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Bank Details Submitted Successfully")),
+        SnackBar(content: Text(body['message'] as String? ?? "Bank Details Submitted Successfully")),
       );
       await SessionPrefs.setLoggedIn('seller');
       if (!mounted) return;
@@ -33,6 +62,13 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
         MaterialPageRoute(builder: (context) => const SellerDashboardScreen()),
         (route) => false,
       );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Something went wrong. Please check your connection.")),
+      );
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 
@@ -220,7 +256,7 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: submitForm,
+                    onPressed: isSubmitting ? null : submitForm,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xffB21E2B),
                       elevation: 0,
@@ -228,9 +264,9 @@ class _BankPaymentDetailsPageState extends State<BankPaymentDetailsPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      "Next",
-                      style: TextStyle(
+                    child: Text(
+                      isSubmitting ? "Please wait..." : "Next",
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,

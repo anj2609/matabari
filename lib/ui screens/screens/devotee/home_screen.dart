@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
+import 'package:matabari/config/utils/apis/api_constants.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
@@ -11,9 +15,14 @@ import 'package:matabari/widgets/testimonialcard.dart';
 import 'package:matabari/widgets/upcommingpuja_widget.dart';
 import 'package:matabari/widgets/whywithus_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   // Shared red gradient used for primary CTAs across the app (matches the
   // sign-up/login screens used by the Prasad Seller flow).
   static const LinearGradient _redGradient = LinearGradient(
@@ -22,6 +31,35 @@ class HomeScreen extends StatelessWidget {
     colors: [Color(0xffC42118), Color(0xff9D1911), Color(0xff650E07)],
     stops: [0.0, 0.45, 1.0],
   );
+
+  List<Map<String, dynamic>> _testimonials = [];
+  bool _loadingTestimonials = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTestimonials();
+  }
+
+  Future<void> _fetchTestimonials() async {
+    try {
+      final response = await ApiClient.getTestimonials();
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = body['data'] as List<dynamic>? ?? [];
+        setState(() {
+          _testimonials = data.cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {
+      // Leave the section empty on failure - it's non-critical dashboard
+      // content, not worth blocking or erroring the whole home screen for.
+    } finally {
+      if (mounted) setState(() => _loadingTestimonials = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -528,7 +566,38 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              TestimonialCard(),
+              if (_loadingTestimonials)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: CircularProgressIndicator(
+                      color: ColorResources.kOrange,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                )
+              else if (_testimonials.isEmpty)
+                Center(
+                  child: Text(
+                    "No testimonials yet",
+                    style: avenirNextRegular.copyWith(
+                      color: ColorResources.textLight,
+                      fontSize: Dimensions.fontSizeDefault,
+                    ),
+                  ),
+                )
+              else
+                for (int i = 0; i < _testimonials.length; i++) ...[
+                  if (i != 0) const SizedBox(height: 10),
+                  TestimonialCard(
+                    name: _testimonials[i]['name'] as String? ?? '',
+                    rating: (_testimonials[i]['rating'] as num?)?.toInt() ?? 0,
+                    comment: _testimonials[i]['comment'] as String? ?? '',
+                    imageUrl: _testimonials[i]['image'] == null
+                        ? ''
+                        : '${ApiConstants.baseUrl}${_testimonials[i]['image']}',
+                  ),
+                ],
               const SizedBox(height: 20),
               Center(
                 child: Text(

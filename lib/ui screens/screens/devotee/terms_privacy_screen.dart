@@ -1,4 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:http/http.dart' as http;
+import 'package:matabari/config/utils/apis/api_client.dart';
+import 'package:matabari/config/utils/apis/api_constants.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
@@ -23,6 +29,7 @@ class TermsPrivacyScreen extends StatelessWidget {
           "access darshan services responsibly and in good faith. Bookings "
           "are subject to temple availability, and any misuse of the "
           "platform may result in suspension of your account.",
+      "endpoint": ApiConstants.cmsTermsAndConditions,
     },
     {
       "icon": "lock",
@@ -32,22 +39,16 @@ class TermsPrivacyScreen extends StatelessWidget {
           "bookings and offerings - name, contact details and payment "
           "information. Your data is never sold and is used solely to "
           "deliver our puja, aarti and prasad services.",
+      "endpoint": ApiConstants.cmsPrivacyPolicy,
     },
     {
-      "icon": "shield",
-      "title": "Data Protection",
-      "subtitle": "How your information is kept secure",
-      "body": "All personal and payment data is encrypted in transit and "
-          "at rest. Access is limited to authorised personnel who need it "
-          "to fulfil your bookings and support requests.",
-    },
-    {
-      "icon": "person",
-      "title": "User Responsibilities",
-      "subtitle": "Your obligations while using the app",
-      "body": "You are responsible for keeping your account credentials "
-          "confidential and for providing accurate family and booking "
-          "details so that pujas and offerings can be performed correctly.",
+      "icon": "refund",
+      "title": "Return & Refund Policy",
+      "subtitle": "Understand our refund & return process",
+      "body": "Refunds are applicable only when a booking or order cannot "
+          "be fulfilled by the temple administration. Eligible refunds are "
+          "processed within 7-10 business days.",
+      "endpoint": ApiConstants.cmsReturnRefundPolicy,
     },
   ];
 
@@ -60,33 +61,15 @@ class TermsPrivacyScreen extends StatelessWidget {
           "Shaktipeeth, offering puja bookings, live e-Darshan, aarti and "
           "prasad delivery so you can stay connected to the temple from "
           "anywhere.",
-    },
-    {
-      "icon": "warning",
-      "title": "Disclaimer",
-      "subtitle": "Important information about our services",
-      "body": "Puja timings and rituals are performed by temple priests on "
-          "your behalf. While we take every care to honour your requests, "
-          "outcomes of prayers and rituals are a matter of personal faith.",
-    },
-    {
-      "icon": "update",
-      "title": "Change to Policy",
-      "subtitle": "How we notify you of policy updates",
-      "body": "We may update these policies periodically to reflect new "
-          "features or legal requirements. Continued use of the app after "
-          "an update means you accept the revised terms.",
+      "endpoint": ApiConstants.cmsAboutUs,
     },
   ];
 
   static const Map<String, IconData> _icons = {
     "description": Icons.description_outlined,
     "lock": Icons.lock_outline,
-    "shield": Icons.shield_outlined,
-    "person": Icons.person_outline,
     "info": Icons.info_outline,
-    "warning": Icons.warning_amber_outlined,
-    "update": Icons.published_with_changes_outlined,
+    "refund": Icons.currency_exchange,
   };
 
   void _notify(BuildContext context, String message) {
@@ -100,7 +83,13 @@ class TermsPrivacyScreen extends StatelessWidget {
     );
   }
 
+  /// Shows a policy/about item in a bottom sheet. If the item has an
+  /// "endpoint" (the 4 CMS-backed items), it fetches the live content from
+  /// the backend and renders its HTML, falling back to the static "body"
+  /// text on failure. Items without an endpoint just show their static body.
   void _showPolicy(BuildContext context, Map<String, String> item) {
+    final endpoint = item['endpoint'];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -111,42 +100,114 @@ class TermsPrivacyScreen extends StatelessWidget {
       builder: (sheetContext) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(_icons[item['icon']], color: const Color(0xff9D1911), size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      item['title']!,
-                      style: cormorantInfantBold.copyWith(
-                        color: ColorResources.blackColor,
-                        fontSize: Dimensions.spacingSize18,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.75,
+            ),
+            child: endpoint == null
+                ? _policySheetBody(
+                    sheetContext: sheetContext,
+                    icon: item['icon'],
+                    title: item['title']!,
+                    body: Text(
+                      item['body']!,
+                      style: avenirNextRegular.copyWith(
+                        color: ColorResources.textLight,
+                        fontSize: Dimensions.fontSizeDefault,
+                        height: 1.5,
                       ),
                     ),
+                  )
+                : FutureBuilder<http.Response>(
+                    future: ApiClient.getCmsPage(endpoint),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return _policySheetBody(
+                          sheetContext: sheetContext,
+                          icon: item['icon'],
+                          title: item['title']!,
+                          body: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xff9D1911),
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      String title = item['title']!;
+                      String? htmlBody;
+                      try {
+                        final response = snapshot.data;
+                        if (response != null && response.statusCode == 200) {
+                          final data =
+                              (jsonDecode(response.body) as Map<String, dynamic>)['data']
+                                  as Map<String, dynamic>?;
+                          title = data?['name'] as String? ?? title;
+                          htmlBody = data?['details'] as String?;
+                        }
+                      } catch (_) {}
+
+                      return _policySheetBody(
+                        sheetContext: sheetContext,
+                        icon: item['icon'],
+                        title: title,
+                        body: SingleChildScrollView(
+                          child: htmlBody != null
+                              ? Html(data: htmlBody)
+                              : Text(
+                                  item['body']!,
+                                  style: avenirNextRegular.copyWith(
+                                    color: ColorResources.textLight,
+                                    fontSize: Dimensions.fontSizeDefault,
+                                    height: 1.5,
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(sheetContext),
-                    child: const Icon(Icons.close, color: ColorResources.textLight, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                item['body']!,
-                style: avenirNextRegular.copyWith(
-                  color: ColorResources.textLight,
-                  fontSize: Dimensions.fontSizeDefault,
-                  height: 1.5,
-                ),
-              ),
-            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _policySheetBody({
+    required BuildContext sheetContext,
+    required String? icon,
+    required String title,
+    required Widget body,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(_icons[icon], color: const Color(0xff9D1911), size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: cormorantInfantBold.copyWith(
+                  color: ColorResources.blackColor,
+                  fontSize: Dimensions.spacingSize18,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.pop(sheetContext),
+              child: const Icon(Icons.close, color: ColorResources.textLight, size: 20),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Flexible(child: body),
+      ],
     );
   }
 

@@ -4,7 +4,18 @@ import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
 
 class TestimonialCard extends StatelessWidget {
-  const TestimonialCard({super.key});
+  final String name;
+  final int rating;
+  final String comment;
+  final String imageUrl;
+
+  const TestimonialCard({
+    super.key,
+    required this.name,
+    required this.rating,
+    required this.comment,
+    required this.imageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +40,14 @@ class TestimonialCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(2),
               child: ClipOval(
-                child: Image.network(
-                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
-                  fit: BoxFit.cover,
-                ),
+                child: imageUrl.isEmpty
+                    ? const Icon(Icons.person, color: ColorResources.textLight)
+                    : Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.person, color: ColorResources.textLight),
+                      ),
               ),
             ),
           ),
@@ -49,7 +64,7 @@ class TestimonialCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   text: TextSpan(
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: '❝ ',
                         style: TextStyle(
                           color: Color(0xFFE67E22),
@@ -58,8 +73,7 @@ class TestimonialCard extends StatelessWidget {
                         ),
                       ),
                       TextSpan(
-                        text:
-                            'Very divine experience, Everything is so well organized and the blessings feel so real.',
+                        text: comment,
                         style: cormorantInfantBold.copyWith(
                           color: ColorResources.textLight,
                           fontSize: Dimensions.spacingSize12,
@@ -75,7 +89,9 @@ class TestimonialCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        "- Neha Sharma",
+                        "- $name",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: cormorantInfantBold.copyWith(
                           color: ColorResources.textLight,
                           fontSize: Dimensions.spacingSize12,
@@ -86,11 +102,11 @@ class TestimonialCard extends StatelessWidget {
                     Row(
                       children: List.generate(
                         5,
-                        (index) => const Padding(
-                          padding: EdgeInsets.only(left: 1),
+                        (index) => Padding(
+                          padding: const EdgeInsets.only(left: 1),
                           child: Icon(
-                            Icons.star,
-                            color: Color(0xFFE67E22),
+                            index < rating ? Icons.star : Icons.star_border,
+                            color: const Color(0xFFE67E22),
                             size: 10,
                           ),
                         ),
