@@ -282,4 +282,56 @@ class ApiClient {
 
     return response;
   }
+
+  /// Fetches the pandit's current wallet balance.
+  static Future<http.Response> getPanditWallet() async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.panditWallet}');
+    final response = await http
+        .get(uri, headers: await _authHeaders())
+        .timeout(_timeout);
+
+    debugPrint('panditWallet response [${response.statusCode}]: ${response.body}');
+
+    return response;
+  }
+
+  /// Fetches a page of the pandit's wallet transaction history.
+  static Future<http.Response> getPanditWalletHistory({int page = 1}) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.panditWalletHistory}',
+    ).replace(queryParameters: {'page': page.toString()});
+    final response = await http
+        .get(uri, headers: await _authHeaders())
+        .timeout(_timeout);
+
+    debugPrint(
+      'panditWalletHistory[page=$page] response [${response.statusCode}]: ${response.body}',
+    );
+
+    return response;
+  }
+
+  /// Fetches the logged-in pandit's profile.
+  static Future<http.Response> getPanditProfile() async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.panditProfile}');
+    final response = await http
+        .get(uri, headers: await _authHeaders())
+        .timeout(_timeout);
+
+    debugPrint('panditProfile response [${response.statusCode}]: ${response.body}');
+
+    return response;
+  }
+
+  /// Fetches the logged-in user's saved bank details.
+  static Future<http.Response> getBankInfo() async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.bankInfo}');
+    final response = await http
+        .get(uri, headers: await _authHeaders())
+        .timeout(_timeout);
+
+    debugPrint('getBankInfo response [${response.statusCode}]: ${response.body}');
+
+    return response;
+  }
 }

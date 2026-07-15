@@ -41,8 +41,8 @@ class _PujaBookingsScreenState extends State<PujaBookingsScreen> {
   int _lastPage = 1;
   bool _loadingMore = false;
 
-  static const _tabs = ["Upcoming", "Today", "Completed", "Cancelled"];
-  static const _tabCategories = ["upcoming", "today", "completed", "cancelled"];
+  static const _tabs = ["Upcoming", "Today", "Completed"];
+  static const _tabCategories = ["upcoming", "today", "completed"];
 
   @override
   void initState() {

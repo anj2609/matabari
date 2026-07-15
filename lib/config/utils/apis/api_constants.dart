@@ -16,4 +16,7 @@ class ApiConstants {
   static const String businessListing = 'api/business-listing';
   static const String panditBookings = 'api/pandit/bookings';
   static const String panditBookingDetails = 'api/pandit/bookings/details';
+  static const String panditWallet = 'api/pandit/wallet';
+  static const String panditWalletHistory = 'api/pandit/wallet/history';
+  static const String panditProfile = 'api/pandit/profile';
 }

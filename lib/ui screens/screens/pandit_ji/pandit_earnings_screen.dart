@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/dimensions.dart';
 import 'package:matabari/config/utils/style.dart';
@@ -24,52 +27,187 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
   );
 
   String selectedDate = "All Dates";
-  String selectedPujaType = "All Types";
   String selectedStatus = "All Status";
   String selectedSort = "Date (Newest)";
 
-  static const List<Map<String, String>> _earnings = [
-    {
-      "title": "Maa Tripura Sundari Puja",
-      "date": "25 Jun 2026",
-      "amount": "2500",
-      "status": "Paid",
-      "image": "assets/images/Rectangle 693.png",
-    },
-    {
-      "title": "Rudrabhishek",
-      "date": "23 Jun 2026",
-      "amount": "3000",
-      "status": "Paid",
-      "image": "assets/images/Rectangle 703.png",
-    },
-    {
-      "title": "Navgraha Shanti Puja",
-      "date": "20 Jun 2026",
-      "amount": "2000",
-      "status": "Paid",
-      "image": "assets/images/Rectangle 720.png",
-    },
-    {
-      "title": "Durga Saptashati Path",
-      "date": "15 Jun 2026",
-      "amount": "1500",
-      "status": "Paid",
-      "image": "assets/images/Rectangle 725.png",
-    },
-    {
-      "title": "Laxmi Puja",
-      "date": "12 Jun 2026",
-      "amount": "2000",
-      "status": "Pending",
-      "image": "assets/images/Rectangle 708.png",
-    },
-  ];
+  List<Map<String, String>> _transactions = [];
+  bool _loading = true;
+  String? _error;
+
+  final ScrollController _scrollController = ScrollController();
+  int _currentPage = 1;
+  int _lastPage = 1;
+  bool _loadingMore = false;
+
+  num? _walletBalance;
+  num? _totalEarning;
+  num? _pendingAmount;
+  bool _loadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStats();
+    _fetchHistory();
+    _scrollController.addListener(_onScroll);
+  }
+
+  /// api/pandit/profile already returns wallet_balance alongside
+  /// total_earning and pending_amount, so one call covers all 3 stats -
+  /// no need to also hit api/pandit/wallet separately here.
+  Future<void> _fetchStats() async {
+    setState(() => _loadingStats = true);
+    try {
+      final profileResponse = await ApiClient.getPanditProfile();
+      if (!mounted) return;
+
+      num? walletBalance;
+      num? totalEarning;
+      num? pendingAmount;
+
+      if (profileResponse.statusCode == 200) {
+        final body = jsonDecode(profileResponse.body) as Map<String, dynamic>;
+        final data = body['data'] as Map<String, dynamic>?;
+        walletBalance = data?['wallet_balance'] as num?;
+        totalEarning = data?['total_earning'] as num?;
+        pendingAmount = data?['pending_amount'] as num?;
+      }
+
+      setState(() {
+        _walletBalance = walletBalance;
+        _totalEarning = totalEarning;
+        _pendingAmount = pendingAmount;
+      });
+    } catch (_) {
+      // Leave values null - shown as "N/A" rather than fabricated.
+    } finally {
+      if (mounted) setState(() => _loadingStats = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_loading || _loadingMore) return;
+    if (_currentPage >= _lastPage) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMoreHistory();
+    }
+  }
+
+  /// Fetches page 1 of wallet history, replacing whatever was loaded before.
+  Future<void> _fetchHistory() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _transactions = [];
+      _currentPage = 1;
+      _lastPage = 1;
+    });
+
+    try {
+      final response = await ApiClient.getPanditWalletHistory(page: 1);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final page = body['data'] as Map<String, dynamic>?;
+        final list = page?['data'] as List<dynamic>? ?? [];
+        setState(() {
+          _transactions = list.map((e) => _normalizeTransaction(e as Map<String, dynamic>)).toList();
+          _currentPage = page?['current_page'] as int? ?? 1;
+          _lastPage = page?['last_page'] as int? ?? 1;
+        });
+      } else {
+        setState(() => _error = body['message'] as String? ?? "Failed to load earnings history.");
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = "Something went wrong. Please check your connection.");
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Fetches the next page and appends it - infinite scroll.
+  Future<void> _loadMoreHistory() async {
+    if (_loadingMore || _currentPage >= _lastPage) return;
+
+    setState(() => _loadingMore = true);
+    try {
+      final nextPage = _currentPage + 1;
+      final response = await ApiClient.getPanditWalletHistory(page: nextPage);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final page = body['data'] as Map<String, dynamic>?;
+        final list = page?['data'] as List<dynamic>? ?? [];
+        setState(() {
+          _transactions.addAll(list.map((e) => _normalizeTransaction(e as Map<String, dynamic>)));
+          _currentPage = page?['current_page'] as int? ?? nextPage;
+          _lastPage = page?['last_page'] as int? ?? _lastPage;
+        });
+      }
+    } catch (_) {
+      // Silently ignore - scrolling again will retry.
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
+  }
+
+  /// Best-effort mapping for a wallet-history row. api/pandit/wallet/history's
+  /// sample response always has an empty `data` array, so the shape of a
+  /// real item is unknown - this tries several plausible field names per
+  /// value. Replace with exact keys once a real (non-empty) example exists.
+  Map<String, String> _normalizeTransaction(Map<String, dynamic> raw) {
+    String pick(List<String> keys) {
+      for (final k in keys) {
+        final v = raw[k];
+        if (v != null && v.toString().trim().isNotEmpty) return v.toString();
+      }
+      return '';
+    }
+
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+
+    final rawDate = pick(['date', 'created_at', 'transaction_date', 'createdAt']);
+    var dateLabel = rawDate;
+    if (rawDate.isNotEmpty) {
+      try {
+        final d = DateTime.parse(rawDate);
+        dateLabel = "${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}";
+      } catch (_) {
+        dateLabel = rawDate;
+      }
+    }
+
+    final amount = pick(['amount', 'value', 'total']);
+    final type = pick(['type', 'transaction_type', 'status']);
+    final title = pick(['title', 'description', 'remark', 'note', 'puja_name']);
+
+    return {
+      'title': title.isEmpty ? (type.isEmpty ? 'Transaction' : _capitalize(type)) : title,
+      'date': dateLabel,
+      'amount': amount,
+      'status': type.isEmpty ? '' : _capitalize(type),
+    };
+  }
+
+  String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
   List<Map<String, String>> get _filtered {
-    var list = _earnings
+    var list = _transactions
         .where((e) => selectedDate == "All Dates" || e['date'] == selectedDate)
-        .where((e) => selectedPujaType == "All Types" || e['title'] == selectedPujaType)
         .where((e) => selectedStatus == "All Status" || e['status'] == selectedStatus)
         .toList();
 
@@ -78,7 +216,8 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
         case "Name (A-Z)":
           return a['title']!.compareTo(b['title']!);
         case "Amount (Highest)":
-          return int.parse(b['amount']!).compareTo(int.parse(a['amount']!));
+          return (double.tryParse(b['amount'] ?? '') ?? 0)
+              .compareTo(double.tryParse(a['amount'] ?? '') ?? 0);
         case "Date (Oldest)":
           return a['date']!.compareTo(b['date']!);
         default:
@@ -138,7 +277,10 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
                         GestureDetector(
                           onTap: () => _pickFilter(
                             title: "Filter by Date",
-                            options: ["All Dates", ..._earnings.map((e) => e['date']!).toSet()],
+                            options: [
+                              "All Dates",
+                              ..._transactions.map((e) => e['date']!).where((d) => d.isNotEmpty).toSet(),
+                            ],
                             selected: selectedDate,
                             onSelected: (v) => setState(() => selectedDate = v),
                           ),
@@ -196,7 +338,25 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
                     _filterRow(),
                     const SizedBox(height: 10),
                     Expanded(
-                      child: results.isEmpty
+                      child: _loading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xff9D1911),
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : _error != null
+                          ? Center(
+                              child: Text(
+                                _error!,
+                                textAlign: TextAlign.center,
+                                style: avenirNextRegular.copyWith(
+                                  color: ColorResources.textLight,
+                                  fontSize: Dimensions.fontSizeDefault,
+                                ),
+                              ),
+                            )
+                          : results.isEmpty
                           ? Center(
                               child: Text(
                                 "No earnings match your filters",
@@ -207,9 +367,23 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
                               ),
                             )
                           : ListView.builder(
+                              controller: _scrollController,
                               padding: const EdgeInsets.only(bottom: 16),
-                              itemCount: results.length,
-                              itemBuilder: (context, index) => _earningRow(results[index]),
+                              itemCount: results.length + (_loadingMore ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index >= results.length) {
+                                  return const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: Color(0xff9D1911),
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return _transactionRow(results[index]);
+                              },
                             ),
                     ),
                   ],
@@ -225,9 +399,9 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
   /// ---------------- STATS ROW ----------------
   Widget _statsRow() {
     final stats = [
-      ("Total Earnings", "₹85,000", "All Time"),
-      ("Paid Amount", "₹60,000", "This Month"),
-      ("Pending Amount", "₹25,000", "Pending Payout"),
+      ("Total Earnings", _totalEarning, "All Time"),
+      ("Wallet Balance", _walletBalance, "Available Now"),
+      ("Pending Amount", _pendingAmount, "Pending Payout"),
     ];
 
     return Padding(
@@ -255,13 +429,22 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    value,
-                    style: cormorantInfantBold.copyWith(
-                      color: const Color(0xff9D1911),
-                      fontSize: Dimensions.spacingSize16,
-                    ),
-                  ),
+                  _loadingStats
+                      ? const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(
+                            color: Color(0xff9D1911),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          value == null ? "N/A" : "₹$value",
+                          style: cormorantInfantBold.copyWith(
+                            color: const Color(0xff9D1911),
+                            fontSize: Dimensions.spacingSize16,
+                          ),
+                        ),
                   const SizedBox(height: 2),
                   Text(
                     sub,
@@ -321,21 +504,20 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
         children: [
           _filterChip("Date", selectedDate, () => _pickFilter(
                 title: "Filter by Date",
-                options: ["All Dates", ..._earnings.map((e) => e['date']!).toSet()],
+                options: [
+                  "All Dates",
+                  ..._transactions.map((e) => e['date']!).where((d) => d.isNotEmpty).toSet(),
+                ],
                 selected: selectedDate,
                 onSelected: (v) => setState(() => selectedDate = v),
               )),
           const SizedBox(width: 8),
-          _filterChip("Puja Type", selectedPujaType, () => _pickFilter(
-                title: "Filter by Puja Type",
-                options: ["All Types", ..._earnings.map((e) => e['title']!).toSet()],
-                selected: selectedPujaType,
-                onSelected: (v) => setState(() => selectedPujaType = v),
-              )),
-          const SizedBox(width: 8),
-          _filterChip("Payment Status", selectedStatus, () => _pickFilter(
-                title: "Filter by Payment Status",
-                options: ["All Status", ..._earnings.map((e) => e['status']!).toSet()],
+          _filterChip("Status", selectedStatus, () => _pickFilter(
+                title: "Filter by Status",
+                options: [
+                  "All Status",
+                  ..._transactions.map((e) => e['status']!).where((s) => s.isNotEmpty).toSet(),
+                ],
                 selected: selectedStatus,
                 onSelected: (v) => setState(() => selectedStatus = v),
               )),
@@ -447,9 +629,11 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
     if (choice != null) onSelected(choice);
   }
 
-  /// ---------------- EARNING ROW ----------------
-  Widget _earningRow(Map<String, String> e) {
-    final isPaid = e['status'] == 'Paid';
+  /// ---------------- TRANSACTION ROW ----------------
+  Widget _transactionRow(Map<String, String> e) {
+    final status = e['status'] ?? '';
+    final isDebit = status.toLowerCase().contains('debit') ||
+        status.toLowerCase().contains('withdraw');
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -461,9 +645,15 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(e['image']!, height: 52, width: 52, fit: BoxFit.cover),
+          Container(
+            height: 44,
+            width: 44,
+            decoration: const BoxDecoration(color: Color(0xFFFFF4E6), shape: BoxShape.circle),
+            child: Icon(
+              isDebit ? Icons.arrow_upward : Icons.arrow_downward,
+              color: isDebit ? Colors.redAccent : const Color(0xFF2E7D32),
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -471,7 +661,7 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  e['title']!,
+                  e['title'] ?? 'Transaction',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: cormorantInfantBold.copyWith(
@@ -479,20 +669,22 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
                     fontSize: Dimensions.spacingSize16,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_month_outlined, size: 11, color: Color(0xffF59E0B)),
-                    const SizedBox(width: 4),
-                    Text(
-                      e['date']!,
-                      style: avenirNextRegular.copyWith(
-                        color: ColorResources.textLight,
-                        fontSize: 11,
+                if ((e['date'] ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_month_outlined, size: 11, color: Color(0xffF59E0B)),
+                      const SizedBox(width: 4),
+                      Text(
+                        e['date']!,
+                        style: avenirNextRegular.copyWith(
+                          color: ColorResources.textLight,
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -500,24 +692,26 @@ class _PanditEarningsScreenState extends State<PanditEarningsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                "₹${e['amount']}",
+                "₹${e['amount'] ?? '0'}",
                 style: cormorantInfantBold.copyWith(
                   color: ColorResources.kOrange,
                   fontSize: Dimensions.spacingSize16,
                 ),
               ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isPaid ? const Color(0xFF2E7D32) : const Color(0xFFE07A00),
-                  borderRadius: BorderRadius.circular(10),
+              if (status.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isDebit ? const Color(0xFFE07A00) : const Color(0xFF2E7D32),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    status,
+                    style: cormorantInfantBold.copyWith(color: Colors.white, fontSize: 9),
+                  ),
                 ),
-                child: Text(
-                  e['status']!,
-                  style: cormorantInfantBold.copyWith(color: Colors.white, fontSize: 9),
-                ),
-              ),
+              ],
             ],
           ),
         ],

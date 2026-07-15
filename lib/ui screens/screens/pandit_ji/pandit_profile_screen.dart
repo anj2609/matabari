@@ -1,15 +1,23 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:matabari/config/utils/apis/api_client.dart';
 import 'package:matabari/config/utils/colors.dart';
 import 'package:matabari/config/utils/session_prefs.dart';
 import 'package:matabari/config/utils/style.dart';
 import 'package:matabari/ui%20screens/authscreen/authlogin_screen.dart';
 
 /// "My Profile" tab of the Pandit dashboard - about, specialization,
-/// language, availability, documents and bank details.
-class PanditProfileScreen extends StatelessWidget {
+/// language and bank details.
+class PanditProfileScreen extends StatefulWidget {
   const PanditProfileScreen({super.key});
 
-  static const _specializations = [
+  @override
+  State<PanditProfileScreen> createState() => _PanditProfileScreenState();
+}
+
+class _PanditProfileScreenState extends State<PanditProfileScreen> {
+  static const _defaultSpecializations = [
     "Mata Tripura Sundari Puja",
     "Rudrabhishek",
     "Navagraha Shanti",
@@ -18,28 +26,87 @@ class PanditProfileScreen extends StatelessWidget {
     "Satyanarayan Katha",
   ];
 
-  static const _languages = ["Hindi", "English", "Sanskrit", "Bhojpuri"];
-
-  static const _availability = [
-    ("Available Days", "Monday to Sunday"),
-    ("Available Time", "06:00 AM - 10:00 PM"),
-    ("Time Zone", "IST (GMT+05:30)"),
-  ];
-
-  static const _documents = [
-    ("Aadhar Card", 'assets/images/Ellipse 88.png'),
-    ("PAN Card", 'assets/images/Ellipse 89.png'),
-    ("Certification", 'assets/images/Ellipse 90.png'),
-    ("Temple ID", 'assets/images/Ellipse 91.png'),
-  ];
+  static const _defaultLanguages = ["Hindi", "English", "Sanskrit", "Bhojpuri"];
 
   static TextStyle get _sectionTitleStyle => cormorantInfantBold.copyWith(
     color: ColorResources.textDark,
     fontSize: 14,
   );
 
+  Map<String, dynamic>? _profile;
+  bool _loading = true;
+
+  Map<String, dynamic>? _bankInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+    _fetchBankInfo();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final response = await ApiClient.getPanditProfile();
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        setState(() => _profile = body['data'] as Map<String, dynamic>?);
+      }
+    } catch (_) {
+      // Non-critical - screen falls back to static placeholder content.
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _fetchBankInfo() async {
+    try {
+      final response = await ApiClient.getBankInfo();
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        setState(() => _bankInfo = body['data'] as Map<String, dynamic>?);
+      }
+    } catch (_) {
+      // Non-critical - screen falls back to static placeholder content.
+    }
+  }
+
+  /// Splits a comma-separated field into trimmed chips. Also strips stray
+  /// literal quote characters - the API's `skill` field currently comes
+  /// back as the string `"\"Skill1, Skill2\""` (quotes baked into the
+  /// value itself), which this cleans up.
+  List<String> _splitList(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return [];
+    final cleaned = raw.replaceAll('"', '').trim();
+    if (cleaned.isEmpty) return [];
+    return cleaned.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  }
+
+  String _formatDob(String? iso) {
+    if (iso == null || iso.isEmpty) return '';
+    try {
+      final d = DateTime.parse(iso);
+      const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      ];
+      return "${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}";
+    } catch (_) {
+      return iso;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final specializations = _splitList(_profile?['skill'] as String?);
+    final languages = _splitList(_profile?['language'] as String?);
+    final gender = _profile?['gender'] as String?;
+    final dob = _formatDob(_profile?['dob'] as String?);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 20),
       child: Column(
@@ -47,26 +114,29 @@ class PanditProfileScreen extends StatelessWidget {
         children: [
           _profileCard(),
           const SizedBox(height: 22),
+          _earningsSnapshotRow(),
+          const SizedBox(height: 22),
           _sectionHeaderWithAction("About me", "Edit"),
           const SizedBox(height: 10),
           _aboutCard(),
           const SizedBox(height: 22),
           _sectionHeaderWithAction("Specialization", "Edit"),
           const SizedBox(height: 10),
-          _chipsCard(_specializations),
+          _chipsCard(specializations.isEmpty ? _defaultSpecializations : specializations),
           const SizedBox(height: 22),
           _sectionHeaderWithAction("Language", "Edit"),
           const SizedBox(height: 10),
-          _chipsCard(_languages),
+          _chipsCard(languages.isEmpty ? _defaultLanguages : languages),
           const SizedBox(height: 22),
-          _sectionHeaderWithAction("Availability", "Edit"),
-          const SizedBox(height: 10),
-          _detailsCard(_availability),
-          const SizedBox(height: 22),
-          Text("Documents", style: _sectionTitleStyle),
-          const SizedBox(height: 10),
-          _documentsCard(),
-          const SizedBox(height: 22),
+          if (gender != null || dob.isNotEmpty) ...[
+            _sectionHeaderWithAction("Personal Details", "Edit"),
+            const SizedBox(height: 10),
+            _detailsCard([
+              if (gender != null) ("Gender", gender[0].toUpperCase() + gender.substring(1)),
+              if (dob.isNotEmpty) ("Date of Birth", dob),
+            ]),
+            const SizedBox(height: 22),
+          ],
           _sectionHeaderWithAction("Bank Details", "Edit"),
           const SizedBox(height: 10),
           _bankCard(),
@@ -204,7 +274,7 @@ class PanditProfileScreen extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  "Pandit Rajesh Sharma",
+                  _profile?['name'] as String? ?? "Pandit Rajesh Sharma",
                   overflow: TextOverflow.ellipsis,
                   style: cormorantInfantBold.copyWith(
                     color: ColorResources.textDark,
@@ -226,7 +296,7 @@ class PanditProfileScreen extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                "+91 987-654-3210",
+                _profile?['phone'] as String? ?? "+91 987-654-3210",
                 style: avenirNextCyr.copyWith(
                   color: ColorResources.textLight,
                   fontSize: 10,
@@ -241,7 +311,7 @@ class PanditProfileScreen extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  "panditrajesh@gmail.com",
+                  _profile?['email'] as String? ?? "panditrajesh@gmail.com",
                   overflow: TextOverflow.ellipsis,
                   style: avenirNextCyr.copyWith(
                     color: ColorResources.textLight,
@@ -253,6 +323,62 @@ class PanditProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// ---------------- EARNINGS SNAPSHOT ----------------
+  Widget _earningsSnapshotRow() {
+    final wallet = _profile?['wallet_balance'];
+    final totalEarning = _profile?['total_earning'];
+    final pending = _profile?['pending_amount'];
+
+    final stats = [
+      ("Wallet Balance", wallet),
+      ("Total Earning", totalEarning),
+      ("Pending Amount", pending),
+    ];
+
+    return Row(
+      children: stats.map((s) {
+        final (label, value) = s;
+        return Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            decoration: BoxDecoration(
+              color: ColorResources.cardBg,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorResources.border, width: 1.3),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: avenirNextCyr.copyWith(color: ColorResources.textLight, fontSize: 9),
+                ),
+                const SizedBox(height: 6),
+                _loading
+                    ? const SizedBox(
+                        height: 14,
+                        width: 14,
+                        child: CircularProgressIndicator(
+                          color: ColorResources.kOrange,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        value == null ? "N/A" : "₹$value",
+                        style: cormorantInfantBold.copyWith(
+                          color: const Color(0xff9D1911),
+                          fontSize: 16,
+                        ),
+                      ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -372,49 +498,12 @@ class PanditProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _documentsCard() {
-    return _cardDecoration(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
-      child: Row(
-        children: [
-          for (final doc in _documents) Expanded(child: _documentItem(doc)),
-        ],
-      ),
-    );
-  }
-
-  Widget _documentItem((String, String) doc) {
-    final (label, icon) = doc;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Image.asset(icon, width: 40, height: 40),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: avenirNextCyr.copyWith(
-            color: ColorResources.textDark,
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          "Verified",
-          style: avenirNextCyr.copyWith(
-            color: const Color(0xFF4B703C),
-            fontSize: 8,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _bankCard() {
+    final bankName = _bankInfo?['bank_name'] as String? ?? "State Bank of India";
+    final holderName = _bankInfo?['holder_name'] as String? ?? "Rajesh Sharma";
+    final acNo = _bankInfo?['ac_no'] as String? ?? "1234 5678 9012";
+    final ifscCode = _bankInfo?['ifsc_code'] as String? ?? "SBIN0001234";
+
     return _cardDecoration(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,7 +517,7 @@ class PanditProfileScreen extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                "State Bank of India",
+                bankName,
                 style: avenirNextCyr.copyWith(
                   color: ColorResources.textDark,
                   fontSize: 13,
@@ -438,9 +527,9 @@ class PanditProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _bankInfoRow("Name: Rajesh Sharma", "A/C No: 1234 5678 9012"),
+          _bankInfoRow("Name: $holderName", "A/C No: $acNo"),
           const SizedBox(height: 8),
-          _bankInfoRow("IFSC: SBIN0001234", ""),
+          _bankInfoRow("IFSC: $ifscCode", ""),
         ],
       ),
     );
